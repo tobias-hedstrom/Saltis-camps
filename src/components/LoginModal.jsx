@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAppData } from "../hooks/useAppData";
 import { AGE_GROUPS } from "../data/initialData";
 
-const EQUIPMENT_LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"];
+const EQUIPMENT_LEVELS = ["Nybörjare", "Träning", "Avancerad", "Elit"];
 
 const emptyChild = () => ({
   name: "",
@@ -10,7 +10,7 @@ const emptyChild = () => ({
   ageGroup: AGE_GROUPS[0] ?? "U10",
   allergies: "",
   medicalNotes: "",
-  equipmentLevel: "Intermediate",
+  equipmentLevel: "Träning",
 });
 
 export default function LoginModal({ onClose }) {
@@ -52,7 +52,7 @@ export default function LoginModal({ onClose }) {
     if (ok) {
       onClose();
     } else {
-      setError("Incorrect email or password.");
+      setError("Fel e-post eller lösenord.");
     }
   }
 
@@ -70,7 +70,7 @@ export default function LoginModal({ onClose }) {
     if (ok) {
       onClose();
     } else {
-      setError("An account with this email already exists.");
+      setError("Det finns redan ett konto med den här e-posten.");
     }
   }
 
@@ -84,22 +84,22 @@ export default function LoginModal({ onClose }) {
             className={`tab-btn ${mode === "login" ? "tab-btn-active" : ""}`}
             onClick={() => switchMode("login")}
           >
-            Log In
+            Logga in
           </button>
           <button
             className={`tab-btn ${mode === "create" ? "tab-btn-active" : ""}`}
             onClick={() => switchMode("create")}
           >
-            Create Account
+            Skapa konto
           </button>
         </div>
 
         {mode === "login" ? (
           <>
-            <h2>Log In</h2>
+            <h2>Logga in</h2>
             <form onSubmit={handleLogin}>
               <div className="form-group" style={{ marginTop: "1rem" }}>
-                <label>Email</label>
+                <label>E-post</label>
                 <input
                   type="email"
                   name="email"
@@ -111,7 +111,7 @@ export default function LoginModal({ onClose }) {
                 />
               </div>
               <div className="form-group" style={{ marginTop: "1rem" }}>
-                <label>Password</label>
+                <label>Lösenord</label>
                 <input
                   type="password"
                   name="password"
@@ -128,21 +128,21 @@ export default function LoginModal({ onClose }) {
               )}
               <div className="form-row" style={{ marginTop: "1.5rem" }}>
                 <button type="button" className="btn btn-secondary" onClick={onClose}>
-                  Cancel
+                  Avbryt
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Log In
+                  Logga in
                 </button>
               </div>
             </form>
           </>
         ) : (
           <>
-            <h2>Create Account</h2>
+            <h2>Skapa konto</h2>
             <form onSubmit={handleCreate}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Full Name</label>
+                  <label>Namn</label>
                   <input
                     name="name"
                     className="form-control"
@@ -153,7 +153,7 @@ export default function LoginModal({ onClose }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Email</label>
+                  <label>E-post</label>
                   <input
                     type="email"
                     name="email"
@@ -164,7 +164,7 @@ export default function LoginModal({ onClose }) {
                   />
                 </div>
                 <div className="form-group span-2">
-                  <label>Password</label>
+                  <label>Lösenord</label>
                   <input
                     type="password"
                     name="password"
@@ -180,40 +180,40 @@ export default function LoginModal({ onClose }) {
               {/* Children / athletes section */}
               <div style={{ marginTop: "1.5rem" }}>
                 <div className="tab-section-header" style={{ marginBottom: "0.75rem" }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Athletes (optional)</h3>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Åkare (valfritt)</h3>
                   <button type="button" className="btn btn-secondary btn-sm" onClick={addChild}>
-                    + Add Athlete
+                    + Lägg till åkare
                   </button>
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--gray-500)", marginBottom: "0.75rem" }}>
-                  Add your children now so they appear immediately when registering for camps.
+                  Lägg till barn nu så finns de direkt när du anmäler till läger.
                 </p>
 
                 {children.map((child, i) => (
                   <div key={i} className="child-form-block card" style={{ marginBottom: "1rem", padding: "1rem" }}>
                     <div className="tab-section-header" style={{ marginBottom: "0.75rem" }}>
-                      <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Athlete {i + 1}</span>
+                      <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Åkare {i + 1}</span>
                       <button
                         type="button"
                         className="btn-link btn-link-danger"
                         onClick={() => removeChild(i)}
                       >
-                        Remove
+                        Ta bort
                       </button>
                     </div>
                     <div className="form-grid">
                       <div className="form-group">
-                        <label className="form-label-sm">Name</label>
+                        <label className="form-label-sm">Namn</label>
                         <input
                           className="form-control"
                           value={child.name}
                           onChange={(e) => updateChild(i, "name", e.target.value)}
                           required
-                          placeholder="Athlete name"
+                          placeholder="Åkarens namn"
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label-sm">Birth Year</label>
+                        <label className="form-label-sm">Födelseår</label>
                         <input
                           type="number"
                           className="form-control"
@@ -222,11 +222,11 @@ export default function LoginModal({ onClose }) {
                           required
                           min={2000}
                           max={new Date().getFullYear()}
-                          placeholder="e.g. 2013"
+                          placeholder="t.ex. 2013"
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label-sm">Age Group</label>
+                        <label className="form-label-sm">Grupp</label>
                         <select
                           className="form-control"
                           value={child.ageGroup}
@@ -238,7 +238,7 @@ export default function LoginModal({ onClose }) {
                         </select>
                       </div>
                       <div className="form-group">
-                        <label className="form-label-sm">Equipment Level</label>
+                        <label className="form-label-sm">Nivå</label>
                         <select
                           className="form-control"
                           value={child.equipmentLevel}
@@ -250,21 +250,21 @@ export default function LoginModal({ onClose }) {
                         </select>
                       </div>
                       <div className="form-group">
-                        <label className="form-label-sm">Allergies</label>
+                        <label className="form-label-sm">Allergier</label>
                         <input
                           className="form-control"
                           value={child.allergies}
                           onChange={(e) => updateChild(i, "allergies", e.target.value)}
-                          placeholder="None"
+                          placeholder="Inga"
                         />
                       </div>
                       <div className="form-group">
-                        <label className="form-label-sm">Medical Notes</label>
+                        <label className="form-label-sm">Medicinska anteckningar</label>
                         <input
                           className="form-control"
                           value={child.medicalNotes}
                           onChange={(e) => updateChild(i, "medicalNotes", e.target.value)}
-                          placeholder="Optional"
+                          placeholder="Valfritt"
                         />
                       </div>
                     </div>
@@ -279,10 +279,10 @@ export default function LoginModal({ onClose }) {
               )}
               <div className="form-row" style={{ marginTop: "1.5rem" }}>
                 <button type="button" className="btn btn-secondary" onClick={onClose}>
-                  Cancel
+                  Avbryt
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Create Account
+                  Skapa konto
                 </button>
               </div>
             </form>

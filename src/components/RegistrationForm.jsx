@@ -39,16 +39,15 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
     return (
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <h2>Register for {camp.name}</h2>
+          <h2>Anmälan till {camp.name}</h2>
           <p>
-            You have no athletes added to your account. Please add a family member under{" "}
+            Du har inga åkare tillagda på kontot. Lägg först till en familjemedlem under{" "}
             <Link to="/my-page" onClick={onClose}>
-              My Page
+              Min sida
             </Link>{" "}
-            first.
           </p>
           <button className="btn btn-secondary" onClick={onClose}>
-            Close
+            Stäng
           </button>
         </div>
       </div>
@@ -59,15 +58,15 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
     return (
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <div className="success-icon">✅</div>
-          <h2>Registration Confirmed!</h2>
+          <div className="success-icon" aria-hidden="true" />
+          <h2>Anmälan bekräftad</h2>
           <p>
-            <strong>{selectedAthlete?.name}</strong> has been registered for{" "}
+            <strong>{selectedAthlete?.name}</strong> är anmäld till{" "}
             <strong>{camp.name}</strong>.
           </p>
-          <p>You will receive a confirmation email at {form.email}.</p>
+          <p>Bekräftelse visas på Min sida.</p>
           <button className="btn btn-primary" onClick={onClose}>
-            Done
+            Klart
           </button>
         </div>
       </div>
@@ -80,18 +79,18 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
         <button className="modal-close" onClick={onClose}>
           ✕
         </button>
-        <h2>Register for {camp.name}</h2>
+        <h2>Anmälan till {camp.name}</h2>
         <div className="step-indicator">
-          <div className={`step ${step >= 1 ? "active" : ""}`}>1. Athlete</div>
-          <div className={`step ${step >= 2 ? "active" : ""}`}>2. Details</div>
-          <div className={`step ${step >= 3 ? "active" : ""}`}>3. Confirm</div>
+          <div className={`step ${step >= 1 ? "active" : ""}`}>1. Åkare</div>
+          <div className={`step ${step >= 2 ? "active" : ""}`}>2. Uppgifter</div>
+          <div className={`step ${step >= 3 ? "active" : ""}`}>3. Bekräfta</div>
         </div>
 
         <form onSubmit={handleSubmit}>
           {step === 1 && (
             <div className="form-step">
               <div className="form-group">
-                <label>Select Athlete</label>
+                <label>Välj åkare</label>
                 <select
                   value={selectedAthleteId}
                   onChange={(e) => setSelectedAthleteId(e.target.value)}
@@ -106,21 +105,20 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
               </div>
               {selectedAthlete && (
                 <div className="athlete-preview">
-                  <div><strong>Age group:</strong> {selectedAthlete.ageGroup}</div>
-                  <div><strong>Birth year:</strong> {selectedAthlete.birthYear}</div>
+                  <div><strong>Grupp:</strong> {selectedAthlete.ageGroup}</div>
+                  <div><strong>Födelseår:</strong> {selectedAthlete.birthYear}</div>
                   {selectedAthlete.allergies && (
-                    <div><strong>Allergies:</strong> {selectedAthlete.allergies}</div>
+                    <div><strong>Allergier:</strong> {selectedAthlete.allergies}</div>
                   )}
                 </div>
               )}
               {!camp.ageGroups.includes(selectedAthlete?.ageGroup) && (
                 <div className="alert alert-warning">
-                  This athlete's age group ({selectedAthlete?.ageGroup}) may not be eligible for
-                  this camp. Eligible age groups: {camp.ageGroups.join(", ")}.
+                  Den här gruppen ({selectedAthlete?.ageGroup}) matchar inte lägrets angivna grupper: {camp.ageGroups.join(", ")}.
                 </div>
               )}
               <button type="button" className="btn btn-primary" onClick={() => setStep(2)}>
-                Next →
+                Nästa
               </button>
             </div>
           )}
@@ -128,7 +126,7 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
           {step === 2 && (
             <div className="form-step">
               <div className="form-group">
-                <label>Parent / Guardian Name</label>
+                <label>Förälder / vårdnadshavare</label>
                 <input
                   type="text"
                   name="parentName"
@@ -139,7 +137,7 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
                 />
               </div>
               <div className="form-group">
-                <label>Email</label>
+                <label>E-post</label>
                 <input
                   type="email"
                   name="email"
@@ -150,7 +148,7 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
                 />
               </div>
               <div className="form-group">
-                <label>Phone</label>
+                <label>Telefon</label>
                 <input
                   type="tel"
                   name="phone"
@@ -161,33 +159,33 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
                 />
               </div>
               <div className="form-group">
-                <label>Allergies / Special needs</label>
+                <label>Allergier / särskilda behov</label>
                 <textarea
                   name="specialNotes"
                   value={form.specialNotes}
                   onChange={handleChange}
                   className="form-control"
                   rows={2}
-                  placeholder="Leave blank if none"
+                  placeholder="Lämna tomt om inget"
                 />
               </div>
               <div className="form-group">
-                <label>Travel / Accommodation comments</label>
+                <label>Kommentar om resa / boende</label>
                 <textarea
                   name="comments"
                   value={form.comments}
                   onChange={handleChange}
                   className="form-control"
                   rows={2}
-                  placeholder="Any specific requests or notes"
+                  placeholder="Eventuella önskemål eller anteckningar"
                 />
               </div>
               <div className="form-row">
                 <button type="button" className="btn btn-secondary" onClick={() => setStep(1)}>
-                  ← Back
+                  Tillbaka
                 </button>
                 <button type="button" className="btn btn-primary" onClick={() => setStep(3)}>
-                  Next →
+                  Nästa
                 </button>
               </div>
             </div>
@@ -195,16 +193,16 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
 
           {step === 3 && (
             <div className="form-step">
-              <h3>Confirm Registration</h3>
+              <h3>Bekräfta anmälan</h3>
               <div className="confirm-summary">
-                <div><strong>Athlete:</strong> {selectedAthlete?.name} ({selectedAthlete?.ageGroup})</div>
-                <div><strong>Camp:</strong> {camp.name}</div>
-                <div><strong>Dates:</strong> {camp.startDate} – {camp.endDate}</div>
-                <div><strong>Parent/Contact:</strong> {form.parentName}</div>
-                <div><strong>Email:</strong> {form.email}</div>
-                <div><strong>Phone:</strong> {form.phone}</div>
-                {form.specialNotes && <div><strong>Special notes:</strong> {form.specialNotes}</div>}
-                {form.comments && <div><strong>Comments:</strong> {form.comments}</div>}
+                <div><strong>Åkare:</strong> {selectedAthlete?.name} ({selectedAthlete?.ageGroup})</div>
+                <div><strong>Läger:</strong> {camp.name}</div>
+                <div><strong>Datum:</strong> {camp.startDate} - {camp.endDate}</div>
+                <div><strong>Kontakt:</strong> {form.parentName}</div>
+                <div><strong>E-post:</strong> {form.email}</div>
+                <div><strong>Telefon:</strong> {form.phone}</div>
+                {form.specialNotes && <div><strong>Särskilda anteckningar:</strong> {form.specialNotes}</div>}
+                {form.comments && <div><strong>Kommentar:</strong> {form.comments}</div>}
               </div>
               <div className="form-group checkbox-group">
                 <input
@@ -215,15 +213,15 @@ export default function RegistrationForm({ camp, athletes, user, onSubmit, onClo
                   onChange={handleChange}
                 />
                 <label htmlFor="agreeTerms">
-                  I confirm that the information is correct and I accept the camp terms and cancellation policy.
+                  Jag bekräftar att uppgifterna stämmer och accepterar lägrets villkor och avbokningsregler.
                 </label>
               </div>
               <div className="form-row">
                 <button type="button" className="btn btn-secondary" onClick={() => setStep(2)}>
-                  ← Back
+                  Tillbaka
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={!form.agreeTerms}>
-                  Submit Registration
+                  Skicka anmälan
                 </button>
               </div>
             </div>

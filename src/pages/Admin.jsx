@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppData } from "../hooks/useAppData";
-import { calculateCampFinancials, formatDate, formatSEK, daysUntil } from "../utils/costCalculations";
+import { calculateCampFinancials, getCampDisplayStatus, formatDate, formatSEK, daysUntil } from "../utils/costCalculations";
 import { exportSingleCamp, exportBoardCsv } from "../utils/exportUtils";
 import StatusBadge from "../components/StatusBadge";
 import CostSummary from "../components/CostSummary";
@@ -9,13 +9,14 @@ import AdminCampForm from "../components/AdminCampForm";
 import AdminCostEditor from "../components/AdminCostEditor";
 import AdminNewsForm from "../components/AdminNewsForm";
 import ExportButton from "../components/ExportButton";
+import { categoryLabel } from "../utils/displayText";
 
 const ADMIN_TABS = [
-  { key: "dashboard",     label: "Dashboard" },
-  { key: "camps",         label: "Camps" },
-  { key: "news",          label: "News" },
-  { key: "registrations", label: "Registrations" },
-  { key: "costs",         label: "Costs" },
+  { key: "dashboard",     label: "Översikt" },
+  { key: "camps",         label: "Läger" },
+  { key: "costs",         label: "Kostnader" },
+  { key: "registrations", label: "Anmälningar" },
+  { key: "news",          label: "Nyheter" },
   { key: "export",        label: "Export" },
 ];
 
@@ -87,7 +88,7 @@ export default function Admin() {
 
   const atRiskCount = camps.filter((c) => {
     const f = calculateCampFinancials(c, registeredCount(c.id));
-    return f.financialStatus === "at-risk";
+    return getCampDisplayStatus(c, f) === "needs-target";
   }).length;
 
   return (
@@ -115,20 +116,20 @@ export default function Admin() {
       {confirmDelete && (
         <div className="modal-overlay" onClick={() => setConfirmDelete(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Delete Camp</h2>
+            <h2>Ta bort läger</h2>
             <p>
-              Are you sure you want to delete <strong>{confirmDelete.camp.name}</strong>?
+              Vill du ta bort <strong>{confirmDelete.camp.name}</strong>?
             </p>
             {confirmDelete.regCount > 0 && (
               <div className="alert alert-danger" style={{ margin: "1rem 0" }}>
-                This will also delete <strong>{confirmDelete.regCount} registration{confirmDelete.regCount !== 1 ? "s" : ""}</strong> linked to this camp.
+                Detta tar också bort <strong>{confirmDelete.regCount} anmälningar</strong> kopplade till lägret.
               </div>
             )}
-            <p style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>This action cannot be undone.</p>
+            <p style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>Åtgärden kan inte ångras.</p>
             <div className="form-row" style={{ marginTop: "1.5rem" }}>
-              <button className="btn btn-secondary" onClick={() => setConfirmDelete(null)}>Cancel</button>
+              <button className="btn btn-secondary" onClick={() => setConfirmDelete(null)}>Avbryt</button>
               <button className="btn" style={{ background: "var(--red-600)", color: "#fff" }} onClick={confirmDeleteCamp}>
-                Delete Camp
+                Ta bort läger
               </button>
             </div>
           </div>
@@ -139,14 +140,14 @@ export default function Admin() {
       {confirmDeleteNews && (
         <div className="modal-overlay" onClick={() => setConfirmDeleteNews(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>Delete News Post</h2>
-            <p>Are you sure you want to delete <strong>{confirmDeleteNews.title}</strong>?</p>
-            <p style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>This action cannot be undone.</p>
+            <h2>Ta bort nyhet</h2>
+            <p>Vill du ta bort <strong>{confirmDeleteNews.title}</strong>?</p>
+            <p style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>Åtgärden kan inte ångras.</p>
             <div className="form-row" style={{ marginTop: "1.5rem" }}>
-              <button className="btn btn-secondary" onClick={() => setConfirmDeleteNews(null)}>Cancel</button>
+              <button className="btn btn-secondary" onClick={() => setConfirmDeleteNews(null)}>Avbryt</button>
               <button className="btn" style={{ background: "var(--red-600)", color: "#fff" }}
                 onClick={() => { deleteNews(confirmDeleteNews.id); setConfirmDeleteNews(null); }}>
-                Delete Post
+                Ta bort nyhet
               </button>
             </div>
           </div>
@@ -156,7 +157,7 @@ export default function Admin() {
       <div className="admin-layout">
         {/* Sidebar */}
         <aside className="admin-sidebar">
-          <div className="admin-sidebar-title">Admin Panel</div>
+          <div className="admin-sidebar-title">Admin</div>
           <nav className="admin-nav">
             {ADMIN_TABS.map((t) => (
               <button
@@ -172,9 +173,9 @@ export default function Admin() {
             <button
               className="btn btn-secondary btn-sm"
               style={{ width: "100%" }}
-              onClick={() => { if (window.confirm("Reset all data to the original mock data? This will delete all your changes.")) resetData(); }}
+              onClick={() => { if (window.confirm("Återställ all lokal data till startläget? Detta tar bort lokala ändringar.")) resetData(); }}
             >
-              Reset Data
+              Återställ data
             </button>
           </div>
         </aside>
@@ -185,54 +186,55 @@ export default function Admin() {
           {/* ── DASHBOARD ─────────────────────────────────────────── */}
           {activeTab === "dashboard" && (
             <div>
-              <h1>Admin Dashboard</h1>
+              <h1>Översikt</h1>
 
               {atRiskCount > 0 && (
                 <div className="alert alert-warning" style={{ marginBottom: "1rem" }}>
-                  {atRiskCount} camp{atRiskCount !== 1 ? "s are" : " is"} at financial risk. Check the Costs tab.
+                  {atRiskCount} läger har inte nått målpriset 800 kr/dag. Se kostnadsfliken för detaljer.
                 </div>
               )}
 
               <div className="cards-row">
                 <div className="summary-card card">
                   <div className="summary-card-num">{camps.length}</div>
-                  <div className="summary-card-label">Total Camps</div>
+                  <div className="summary-card-label">Läger</div>
                 </div>
                 <div className="summary-card card">
                   <div className="summary-card-num">{registrations.length}</div>
-                  <div className="summary-card-label">Total Registrations</div>
+                  <div className="summary-card-label">Anmälningar</div>
                 </div>
                 <div className="summary-card card">
                   <div className="summary-card-num">{registrations.filter((r) => r.paymentStatus === "paid").length}</div>
-                  <div className="summary-card-label">Paid</div>
+                  <div className="summary-card-label">Betalda</div>
                 </div>
                 <div className={`summary-card card ${registrations.filter((r) => r.paymentStatus === "overdue").length > 0 ? "summary-card-danger" : ""}`}>
                   <div className="summary-card-num">{registrations.filter((r) => r.paymentStatus === "overdue").length}</div>
-                  <div className="summary-card-label">Overdue</div>
+                  <div className="summary-card-label">Saknade</div>
                 </div>
               </div>
 
-              <h2 style={{ marginTop: "1.5rem" }}>Camp Overview</h2>
+              <h2 style={{ marginTop: "1.5rem" }}>Lägeröversikt</h2>
               <div className="table-wrap card">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Camp</th>
-                      <th>Dates</th>
-                      <th>Registered</th>
-                      <th>Reg. Deadline</th>
-                      <th>Pay. Deadline</th>
+                      <th>Läger</th>
+                      <th>Datum</th>
+                      <th>Anmälda</th>
+                      <th>Anmälan</th>
+                      <th>Betalning</th>
                       <th>Status</th>
-                      <th>Actions</th>
+                      <th>Åtgärder</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sortedCamps.map((camp) => {
                       const count = registeredCount(camp.id);
                       const f = calculateCampFinancials(camp, count);
+                      const displayStatus = getCampDisplayStatus(camp, f);
                       const daysLeft = daysUntil(camp.registrationDeadline);
                       return (
-                        <tr key={camp.id} className={f.financialStatus === "at-risk" ? "row-warning" : ""}>
+                        <tr key={camp.id} className={displayStatus === "needs-target" ? "row-warning" : ""}>
                           <td><Link to={`/camps/${camp.id}`} className="table-link">{camp.name}</Link></td>
                           <td>{formatDate(camp.startDate)}</td>
                           <td>{count}/{camp.maxAthletes}</td>
@@ -243,50 +245,50 @@ export default function Admin() {
                             )}
                           </td>
                           <td>{formatDate(camp.paymentDeadline)}</td>
-                          <td><StatusBadge status={f.financialStatus} /></td>
+                          <td><StatusBadge status={displayStatus} /></td>
                           <td>
-                            <button className="btn-link" onClick={() => setEditingCamp(camp)}>Edit</button>
+                            <button className="btn-link" onClick={() => setEditingCamp(camp)}>Redigera</button>
                             {" · "}
-                            <button className="btn-link btn-link-danger" onClick={() => handleDeleteCamp(camp)}>Delete</button>
+                            <button className="btn-link btn-link-danger" onClick={() => handleDeleteCamp(camp)}>Ta bort</button>
                           </td>
                         </tr>
                       );
                     })}
                     {camps.length === 0 && (
-                      <tr><td colSpan={7} className="empty-state">No camps yet. Add one above.</td></tr>
+                      <tr><td colSpan={7} className="empty-state">Inga läger ännu.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
 
-              <h2 style={{ marginTop: "1.5rem" }}>Upcoming Deadlines</h2>
+              <h2 style={{ marginTop: "1.5rem" }}>Kommande datum och deadlines</h2>
               <div className="table-wrap card">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Camp</th>
-                      <th>Type</th>
-                      <th>Date</th>
-                      <th>Days Left</th>
+                      <th>Läger</th>
+                      <th>Typ</th>
+                      <th>Datum</th>
+                      <th>Dagar kvar</th>
                     </tr>
                   </thead>
                   <tbody>
                     {camps.flatMap((c) => [
-                      { camp: c, type: "Registration", date: c.registrationDeadline, days: daysUntil(c.registrationDeadline) },
-                      { camp: c, type: "Payment",      date: c.paymentDeadline,      days: daysUntil(c.paymentDeadline) },
+                      { camp: c, type: "Anmälan", date: c.registrationDeadline, days: daysUntil(c.registrationDeadline) },
+                      { camp: c, type: "Betalning",      date: c.paymentDeadline,      days: daysUntil(c.paymentDeadline) },
                     ])
                       .filter((x) => x.days !== null && x.days >= 0)
                       .sort((a, b) => a.days - b.days)
                       .map((x, i) => (
                         <tr key={i} className={x.days <= 7 ? "row-warning" : ""}>
                           <td>{x.camp.name}</td>
-                          <td>{x.type} Deadline</td>
+                          <td>{x.type}</td>
                           <td>{formatDate(x.date)}</td>
-                          <td>{x.days} days</td>
+                          <td>{x.days} dagar</td>
                         </tr>
                       ))}
                     {camps.length === 0 && (
-                      <tr><td colSpan={4} className="empty-state">No deadlines.</td></tr>
+                      <tr><td colSpan={4} className="empty-state">Inga kommande deadlines.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -298,14 +300,15 @@ export default function Admin() {
           {activeTab === "camps" && (
             <div>
               <div className="tab-section-header">
-                <h1>Camps</h1>
+                <h1>Läger</h1>
                 <button className="btn btn-primary" onClick={() => { setEditingCamp(null); setShowCampForm(true); }}>
-                  + Add Camp
+                  + Lägg till läger
                 </button>
               </div>
               {sortedCamps.map((camp) => {
                 const count = registeredCount(camp.id);
                 const f = calculateCampFinancials(camp, count);
+                const displayStatus = getCampDisplayStatus(camp, f);
                 return (
                   <div key={camp.id} className="camp-admin-row card">
                     <div className="camp-admin-row-header">
@@ -314,29 +317,31 @@ export default function Admin() {
                         <div className="text-muted">{camp.location} · {formatDate(camp.startDate)} – {formatDate(camp.endDate)}</div>
                       </div>
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-                        <StatusBadge status={f.financialStatus} />
-                        <button className="btn btn-secondary btn-sm" onClick={() => setEditingCamp(camp)}>Edit</button>
-                        <Link to={`/camps/${camp.id}`} className="btn btn-outline-dark btn-sm">View</Link>
+                        <StatusBadge status={displayStatus} />
+                        <button className="btn btn-secondary btn-sm" onClick={() => setEditingCamp(camp)}>Redigera</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => { setActiveCostCampId(camp.id); setActiveTab("costs"); }}>Hantera kostnader</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => { setRegFilter((filt) => ({ ...filt, camp: camp.id })); setActiveTab("registrations"); }}>Visa anmälda</button>
+                        <Link to={`/camps/${camp.id}`} className="btn btn-outline-dark btn-sm">Visa</Link>
                         <button
                           className="btn btn-sm"
                           style={{ background: "var(--green-100, #f0fdf4)", color: "var(--green-700, #15803d)" }}
                           onClick={() => exportSingleCamp(camp, registrations)}
                         >
-                          Export CSV
+                          Ladda ner CSV
                         </button>
-                        <button className="btn btn-sm" style={{ background: "var(--red-100)", color: "var(--red-600)" }} onClick={() => handleDeleteCamp(camp)}>Delete</button>
+                        <button className="btn btn-sm" style={{ background: "var(--red-100)", color: "var(--red-600)" }} onClick={() => handleDeleteCamp(camp)}>Ta bort</button>
                       </div>
                     </div>
                     <div className="camp-admin-stats">
-                      <span>Registered: <strong>{count}/{camp.maxAthletes}</strong></span>
-                      <span>Price/athlete: <strong>{f.displayedTotalPricePerAthlete !== null ? formatSEK(Math.round(f.displayedTotalPricePerAthlete)) : "—"}</strong></span>
-                      <span>Actual price/day: <strong>{f.actualCostPerAthletePerDay !== null ? formatSEK(Math.round(f.actualCostPerAthletePerDay)) : "—"}</strong></span>
-                      <span>Reg. deadline: <strong>{formatDate(camp.registrationDeadline)}</strong></span>
+                      <span>Anmälda: <strong>{count}/{camp.maxAthletes}</strong></span>
+                      <span>Pris/åkare: <strong>{f.displayedTotalPricePerAthlete !== null ? formatSEK(Math.round(f.displayedTotalPricePerAthlete)) : "—"}</strong></span>
+                      <span>Faktisk kostnad/dag: <strong>{f.actualCostPerAthletePerDay !== null ? formatSEK(Math.round(f.actualCostPerAthletePerDay)) : "—"}</strong></span>
+                      <span>Sista anmälan: <strong>{formatDate(camp.registrationDeadline)}</strong></span>
                     </div>
                   </div>
                 );
               })}
-              {camps.length === 0 && <p className="empty-state">No camps yet. Click "+ Add Camp" to get started.</p>}
+              {camps.length === 0 && <p className="empty-state">Inga läger ännu. Lägg till ett läger för att komma igång.</p>}
             </div>
           )}
 
@@ -344,13 +349,13 @@ export default function Admin() {
           {activeTab === "news" && (
             <div>
               <div className="tab-section-header">
-                <h1>News</h1>
+                <h1>Nyheter</h1>
                 <button className="btn btn-primary" onClick={() => { setEditingNews(null); setShowNewsForm(true); }}>
-                  + Add Post
+                  + Lägg till nyhet
                 </button>
               </div>
               {sortedNews.length === 0 && (
-                <p className="empty-state">No news posts yet. Click "+ Add Post" to get started.</p>
+                <p className="empty-state">Inga nyheter ännu. Lägg till en nyhet för att komma igång.</p>
               )}
               {sortedNews.map((post) => {
                 const relatedCamp = post.relatedCampId
@@ -370,11 +375,11 @@ export default function Admin() {
                         <div>
                           <h3 style={{ marginBottom: "0.2rem" }}>{post.title}</h3>
                           <div className="text-muted" style={{ fontSize: "0.85rem" }}>
-                            {post.category && <span className="news-admin-cat">{post.category}</span>}
+                            {post.category && <span className="news-admin-cat">{categoryLabel(post.category)}</span>}
                             {" "}
                             {formatDate(post.publishDate || post.date)}
                             {relatedCamp && (
-                              <span> · Linked to <Link to={`/camps/${relatedCamp.id}`} className="table-link">{relatedCamp.name}</Link></span>
+                              <span> · Kopplat till <Link to={`/camps/${relatedCamp.id}`} className="table-link">{relatedCamp.name}</Link></span>
                             )}
                           </div>
                           {(post.excerpt || post.summary) && (
@@ -385,14 +390,14 @@ export default function Admin() {
                         </div>
                       </div>
                       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexShrink: 0 }}>
-                        <Link to={`/news/${post.id}`} className="btn btn-outline-dark btn-sm">View</Link>
-                        <button className="btn btn-secondary btn-sm" onClick={() => setEditingNews(post)}>Edit</button>
+                        <Link to={`/news/${post.id}`} className="btn btn-outline-dark btn-sm">Visa</Link>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setEditingNews(post)}>Redigera</button>
                         <button
                           className="btn btn-sm"
                           style={{ background: "var(--red-100)", color: "var(--red-600)" }}
                           onClick={() => setConfirmDeleteNews(post)}
                         >
-                          Delete
+                          Ta bort
                         </button>
                       </div>
                     </div>
@@ -405,29 +410,29 @@ export default function Admin() {
           {/* ── REGISTRATIONS ─────────────────────────────────────── */}
           {activeTab === "registrations" && (
             <div>
-              <h1>Registrations</h1>
+              <h1>Anmälningar</h1>
               <div className="filter-row">
                 <div className="form-group">
-                  <label>Camp</label>
+                  <label>Läger</label>
                   <select className="form-control" value={regFilter.camp} onChange={(e) => setRegFilter((f) => ({ ...f, camp: e.target.value }))}>
-                    <option value="all">All Camps</option>
+                    <option value="all">Alla läger</option>
                     {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Age Group</label>
+                  <label>Grupp</label>
                   <select className="form-control" value={regFilter.ageGroup} onChange={(e) => setRegFilter((f) => ({ ...f, ageGroup: e.target.value }))}>
-                    <option value="all">All Groups</option>
+                    <option value="all">Alla grupper</option>
                     {["U10", "U12", "U14", "U16"].map((g) => <option key={g}>{g}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Payment Status</label>
+                  <label>Betalningsstatus</label>
                   <select className="form-control" value={regFilter.paymentStatus} onChange={(e) => setRegFilter((f) => ({ ...f, paymentStatus: e.target.value }))}>
-                    <option value="all">All Statuses</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="overdue">Overdue</option>
+                    <option value="all">Alla statusar</option>
+                    <option value="paid">Betald</option>
+                    <option value="pending">Kommande</option>
+                    <option value="overdue">Saknas</option>
                   </select>
                 </div>
               </div>
@@ -435,16 +440,16 @@ export default function Admin() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Athlete</th>
-                      <th>Age Group</th>
-                      <th>Parent</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>Camp</th>
-                      <th>Reg. Date</th>
-                      <th>Payment</th>
-                      <th>Comments</th>
-                      <th>Notes</th>
+                      <th>Åkare</th>
+                      <th>Grupp</th>
+                      <th>Förälder</th>
+                      <th>E-post</th>
+                      <th>Telefon</th>
+                      <th>Läger</th>
+                      <th>Anmäld</th>
+                      <th>Betalning</th>
+                      <th>Kommentarer</th>
+                      <th>Anteckningar</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -460,7 +465,7 @@ export default function Admin() {
                           <td>
                             {camp
                               ? <Link to={`/camps/${camp.id}`} className="table-link">{camp.name}</Link>
-                              : <span className="text-muted">Removed</span>}
+                              : <span className="text-muted">Borttaget</span>}
                           </td>
                           <td>{formatDate(r.registrationDate)}</td>
                           <td><StatusBadge status={r.paymentStatus} /></td>
@@ -470,13 +475,13 @@ export default function Admin() {
                       );
                     })}
                     {filteredRegs.length === 0 && (
-                      <tr><td colSpan={10} className="empty-state">No registrations match your filters.</td></tr>
+                      <tr><td colSpan={10} className="empty-state">Inga anmälningar matchar filtren.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
               <div className="text-muted" style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
-                Showing {filteredRegs.length} of {registrations.length} registrations
+                Visar {filteredRegs.length} av {registrations.length} anmälningar
               </div>
             </div>
           )}
@@ -484,9 +489,9 @@ export default function Admin() {
           {/* ── COSTS ─────────────────────────────────────────────── */}
           {activeTab === "costs" && (
             <div>
-              <h1>Cost Management</h1>
+              <h1>Kostnader</h1>
               {camps.length === 0 ? (
-                <p className="empty-state">No camps yet. Add a camp first.</p>
+                <p className="empty-state">Inga läger ännu. Lägg till ett läger först.</p>
               ) : (
                 <>
                   <div className="tabs" style={{ marginBottom: "1.5rem" }}>
@@ -504,7 +509,7 @@ export default function Admin() {
                     <>
                       <CostSummary camp={costCamp} registeredCount={registeredCount(costCamp.id)} adminView={true} />
                       <div className="card" style={{ marginTop: "1.5rem" }}>
-                        <h2>Cost Items</h2>
+                        <h2>Kostnadsposter</h2>
                         <AdminCostEditor camp={costCamp} />
                       </div>
                     </>
@@ -519,33 +524,33 @@ export default function Admin() {
             <div>
               <h1>Export</h1>
               <div className="card">
-                <h2>All Camps Export</h2>
+                <h2>Export för alla läger</h2>
                 <p>
-                  Download a comprehensive CSV with all camp information, registered athletes,
-                  cost breakdowns, financial summaries, and payment statuses.
+                  Ladda ner en samlad CSV med lägerinformation, anmälda åkare,
+                  kostnader, ekonomiska sammanställningar och betalningsstatus.
                 </p>
                 <ul style={{ margin: "1rem 0 1.5rem", paddingLeft: "1.5rem" }}>
-                  <li>Camp overview (all camps)</li>
-                  <li>Registered athletes per camp</li>
-                  <li>Parent contact details</li>
-                  <li>Payment status</li>
-                  <li>Full cost breakdown</li>
-                  <li>Financial summary (revenue, surplus/deficit)</li>
+                  <li>Lägeröversikt</li>
+                  <li>Anmälda åkare per läger</li>
+                  <li>Kontaktuppgifter till föräldrar</li>
+                  <li>Betalningsstatus</li>
+                  <li>Full kostnadsstruktur</li>
+                  <li>Ekonomisk sammanställning</li>
                 </ul>
                 <ExportButton />
                 <p className="text-muted" style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
-                  File format: CSV (opens directly in Excel and Google Sheets).
+                  Filformat: CSV (kan öppnas i Excel och Google Sheets).
                 </p>
               </div>
 
-              <h2 style={{ marginTop: "2rem" }}>Per-Camp Export</h2>
+              <h2 style={{ marginTop: "2rem" }}>Export per läger</h2>
               <div className="table-wrap card">
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Camp</th>
-                      <th>Registered</th>
-                      <th>Price/athlete</th>
+                      <th>Läger</th>
+                      <th>Anmälda</th>
+                      <th>Pris/åkare</th>
                       <th>Export</th>
                     </tr>
                   </thead>
@@ -563,20 +568,20 @@ export default function Admin() {
                               className="btn btn-sm btn-secondary"
                               onClick={() => exportSingleCamp(camp, registrations)}
                             >
-                              Download CSV
+                              Ladda ner CSV
                             </button>
                           </td>
                         </tr>
                       );
                     })}
                     {camps.length === 0 && (
-                      <tr><td colSpan={4} className="empty-state">No camps yet.</td></tr>
+                      <tr><td colSpan={4} className="empty-state">Inga läger ännu.</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
 
-              <h2 style={{ marginTop: "2rem" }}>Financial Summaries</h2>
+              <h2 style={{ marginTop: "2rem" }}>Ekonomisk status</h2>
               {sortedCamps.map((camp) => (
                 <div key={camp.id} style={{ marginBottom: "1.5rem" }}>
                   <h3 style={{ marginBottom: "0.75rem" }}>{camp.name}</h3>

@@ -11,6 +11,7 @@ import { db } from "../lib/supabase";
 // ─── DEFAULT STATE ─────────────────────────────────────────────────────────────
 const DEFAULT_STATE = {
   _schemaVersion: 3,
+  _campPlanVersion: "2026-plan-v2",
   users: INITIAL_USERS,
   currentUserId: null,
   camps: INITIAL_CAMPS,
@@ -28,6 +29,19 @@ function loadFromStorage() {
     const saved = JSON.parse(raw);
     if (!saved.users || saved._schemaVersion !== DEFAULT_STATE._schemaVersion) {
       return DEFAULT_STATE;
+    }
+    if (saved._campPlanVersion !== DEFAULT_STATE._campPlanVersion) {
+      const newCampIds = new Set(INITIAL_CAMPS.map((c) => c.id));
+      const savedRegistrationsForNewPlan = saved.registrations?.filter((r) => newCampIds.has(r.campId)) ?? [];
+      return {
+        ...DEFAULT_STATE,
+        ...saved,
+        _campPlanVersion: DEFAULT_STATE._campPlanVersion,
+        camps: INITIAL_CAMPS,
+        registrations: savedRegistrationsForNewPlan.length > 0
+          ? savedRegistrationsForNewPlan
+          : INITIAL_REGISTRATIONS,
+      };
     }
     return { ...DEFAULT_STATE, ...saved };
   } catch {
@@ -62,6 +76,12 @@ function reducer(state, action) {
           u.id === state.currentUserId ? { ...u, ...action.payload } : u
         ),
       };
+
+    case "SET_USERS":
+      return { ...state, users: action.payload };
+
+    case "SET_ATHLETES":
+      return { ...state, athletes: action.payload };
 
     case "SET_CAMPS":
       return { ...state, camps: action.payload };
@@ -163,24 +183,71 @@ export function AppDataProvider({ children }) {
     }
   }, [state]);
 
-  // ── Load camps + news from Supabase on mount ───────────────────────────────
+  // ── Load all data from Supabase on mount ──────────────────────────────────
   useEffect(() => {
-    if (!db) return; // No Supabase config — use localStorage only
+    if (!db) return;
     async function loadFromSupabase() {
       try {
-        const [camps, news] = await Promise.all([db.getCamps(), db.getNews()]);
+        const [camps, news, dbUsers, dbAthletes] = await Promise.all([
+          db.getCamps(),
+          db.getNews(),
+          db.getUsers(),
+          db.getAthletes(),
+        ]);
 
-        if (camps.length > 0) {
+        // ── Camps ──────────────────────────────────────────────────────────
+        const oldDemoCampIds = new Set(["camp-1", "camp-2", "camp-3"]);
+        const newCampIds = new Set(INITIAL_CAMPS.map((c) => c.id));
+        const hasNewCampPlan = camps.some((c) => newCampIds.has(c.id));
+        const hasOldDemoCamps = camps.some((c) => oldDemoCampIds.has(c.id));
+
+        if (hasOldDemoCamps || !hasNewCampPlan) {
+          await Promise.all([...oldDemoCampIds].map((id) => db.deleteCamp(id)));
+          await Promise.all(INITIAL_CAMPS.map((c) => db.upsertCamp(c)));
+          const preservedCamps = camps.filter((c) => !oldDemoCampIds.has(c.id) && !newCampIds.has(c.id));
+          dispatch({ type: "SET_CAMPS", payload: [...preservedCamps, ...INITIAL_CAMPS] });
+        } else if (camps.length > 0) {
           dispatch({ type: "SET_CAMPS", payload: camps });
         } else {
-          // First run: seed Supabase with the initial data
           await Promise.all(INITIAL_CAMPS.map((c) => db.upsertCamp(c)));
         }
 
+        // ── News ───────────────────────────────────────────────────────────
         if (news.length > 0) {
           dispatch({ type: "SET_NEWS", payload: news });
         } else {
           await Promise.all(INITIAL_NEWS_POSTS.map((p) => db.upsertNews(p)));
+        }
+
+        // ── Users ──────────────────────────────────────────────────────────
+        // Merge: INITIAL_USERS (admin accounts) always present,
+        // plus any accounts created by real users stored in Supabase.
+        const initialUserIds = new Set(INITIAL_USERS.map((u) => u.id));
+        const extraUsers = dbUsers.filter((u) => !initialUserIds.has(u.id));
+        const mergedUsers = [...INITIAL_USERS, ...extraUsers];
+
+        // Seed INITIAL_USERS into Supabase if not yet there
+        const dbUserIds = new Set(dbUsers.map((u) => u.id));
+        await Promise.all(
+          INITIAL_USERS.filter((u) => !dbUserIds.has(u.id)).map((u) => db.upsertUser(u))
+        );
+
+        if (extraUsers.length > 0) {
+          dispatch({ type: "SET_USERS", payload: mergedUsers });
+        }
+
+        // ── Athletes ───────────────────────────────────────────────────────
+        const initialAthleteIds = new Set(INITIAL_ATHLETES.map((a) => a.id));
+        const extraAthletes = dbAthletes.filter((a) => !initialAthleteIds.has(a.id));
+        const mergedAthletes = [...INITIAL_ATHLETES, ...extraAthletes];
+
+        const dbAthleteIds = new Set(dbAthletes.map((a) => a.id));
+        await Promise.all(
+          INITIAL_ATHLETES.filter((a) => !dbAthleteIds.has(a.id)).map((a) => db.upsertAthlete(a))
+        );
+
+        if (extraAthletes.length > 0) {
+          dispatch({ type: "SET_ATHLETES", payload: mergedAthletes });
         }
       } catch (err) {
         console.warn("Supabase load failed, using local data:", err);
@@ -232,17 +299,17 @@ export function AppDataProvider({ children }) {
     const events = [];
     for (const camp of state.camps) {
       if (camp.startDate)
-        events.push({ date: camp.startDate, label: `${camp.name} starts`, type: "camp", campId: camp.id });
+        events.push({ date: camp.startDate, label: `${camp.name} startar`, type: "camp", campId: camp.id });
       if (camp.endDate && camp.endDate !== camp.startDate)
-        events.push({ date: camp.endDate, label: `${camp.name} ends`, type: "camp", campId: camp.id });
+        events.push({ date: camp.endDate, label: `${camp.name} slutar`, type: "camp", campId: camp.id });
       if (camp.registrationDeadline)
-        events.push({ date: camp.registrationDeadline, label: `Registration deadline — ${camp.name}`, type: "deadline", campId: camp.id });
+        events.push({ date: camp.registrationDeadline, label: `Sista anmälningsdag - ${camp.name}`, type: "deadline", campId: camp.id });
       if (camp.paymentDeadline)
-        events.push({ date: camp.paymentDeadline, label: `Payment deadline — ${camp.name}`, type: "payment", campId: camp.id });
+        events.push({ date: camp.paymentDeadline, label: `Sista betalningsdag - ${camp.name}`, type: "payment", campId: camp.id });
       if (camp.travelDateOut && camp.travelDateOut !== camp.startDate)
-        events.push({ date: camp.travelDateOut, label: `Travel day — ${camp.name}`, type: "travel", campId: camp.id });
+        events.push({ date: camp.travelDateOut, label: `Avresedag - ${camp.name}`, type: "travel", campId: camp.id });
       if (camp.infoMeetingDate)
-        events.push({ date: camp.infoMeetingDate, label: `Info meeting — ${camp.name}`, type: "meeting", campId: camp.id });
+        events.push({ date: camp.infoMeetingDate, label: `Informationsmöte - ${camp.name}`, type: "meeting", campId: camp.id });
     }
     return events.sort((a, b) => a.date.localeCompare(b.date));
   }
@@ -276,15 +343,23 @@ export function AppDataProvider({ children }) {
       ageGroup: child.ageGroup,
       allergies: child.allergies || "",
       medicalNotes: child.medicalNotes || "",
-      equipmentLevel: child.equipmentLevel || "Training",
+      equipmentLevel: child.equipmentLevel || "Träning",
       clubGroup: "",
     }));
     dispatch({ type: "CREATE_ACCOUNT", payload: { user: newUser, athletes: newAthletes } });
+    if (db) {
+      db.upsertUser(newUser).catch(console.warn);
+      newAthletes.forEach((a) => db.upsertAthlete(a).catch(console.warn));
+    }
     return true;
   }
 
   function updateCurrentUser(updates) {
     dispatch({ type: "UPDATE_CURRENT_USER", payload: updates });
+    if (db && state.currentUserId) {
+      const existing = state.users.find((u) => u.id === state.currentUserId);
+      if (existing) db.upsertUser({ ...existing, ...updates }).catch(console.warn);
+    }
   }
 
   // ── Camp actions ─────────────────────────────────────────────────────────────
@@ -335,14 +410,14 @@ export function AppDataProvider({ children }) {
 
   function saveAthlete(data) {
     const exists = state.athletes.find((a) => a.id === data.id);
-    dispatch({
-      type: exists ? "UPDATE_ATHLETE" : "ADD_ATHLETE",
-      payload: { id: `athlete-${Date.now()}`, userId: state.currentUserId, ...data },
-    });
+    const payload = { id: `athlete-${Date.now()}`, userId: state.currentUserId, ...data };
+    dispatch({ type: exists ? "UPDATE_ATHLETE" : "ADD_ATHLETE", payload });
+    if (db) db.upsertAthlete(payload).catch(console.warn);
   }
 
   function deleteAthlete(athleteId) {
     dispatch({ type: "DELETE_ATHLETE", payload: athleteId });
+    if (db) db.deleteAthlete(athleteId).catch(console.warn);
   }
 
   // ── News actions ──────────────────────────────────────────────────────────────

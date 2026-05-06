@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NEWS_CATEGORIES } from "../data/initialData";
+import { categoryLabel } from "../utils/displayText";
 import { ThumbnailUpload, GalleryUpload } from "./ImageUpload";
 
 const emptyPost = {
@@ -44,12 +45,12 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onCancel}>x</button>
-        <h2>{post ? "Edit News Post" : "Add News Post"}</h2>
+        <h2>{post ? "Redigera nyhet" : "Lägg till nyhet"}</h2>
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group span-2">
-              <label>Title</label>
+              <label>Rubrik</label>
               <input
                 name="title"
                 className="form-control"
@@ -60,7 +61,7 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
             </div>
 
             <div className="form-group">
-              <label>Category</label>
+              <label>Kategori</label>
               <select
                 name="category"
                 className="form-control"
@@ -68,13 +69,13 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
                 onChange={handleText}
               >
                 {NEWS_CATEGORIES.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>{categoryLabel(c)}</option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label>Publish Date</label>
+              <label>Publiceringsdatum</label>
               <input
                 type="date"
                 name="publishDate"
@@ -86,7 +87,7 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
             </div>
 
             <div className="form-group">
-              <label>Related Camp (optional)</label>
+              <label>Kopplat läger (valfritt)</label>
               <select
                 className="form-control"
                 value={form.relatedCampId || ""}
@@ -94,7 +95,7 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
                   setForm((f) => ({ ...f, relatedCampId: e.target.value || null }))
                 }
               >
-                <option value="">None</option>
+                <option value="">Inget</option>
                 {(camps ?? []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -104,7 +105,7 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
             </div>
 
             <div className="form-group span-2">
-              <label>Excerpt (shown on news cards)</label>
+              <label>Kort ingress (visas på nyhetskort)</label>
               <textarea
                 name="excerpt"
                 className="form-control"
@@ -116,7 +117,7 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
             </div>
 
             <div className="form-group span-2">
-              <label>Full Body Text</label>
+              <label>Full text</label>
               <textarea
                 name="body"
                 className="form-control"
@@ -134,7 +135,7 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
             </div>
 
             <div className="form-group span-2">
-              <label>Gallery Images</label>
+              <label>Bildgalleri</label>
               <GalleryUpload
                 images={form.images}
                 onChange={(imgs) => setForm((f) => ({ ...f, images: imgs }))}
@@ -144,10 +145,10 @@ export default function AdminNewsForm({ post, camps, onSave, onCancel }) {
 
           <div className="form-row" style={{ marginTop: "1.5rem" }}>
             <button type="button" className="btn btn-secondary" onClick={onCancel}>
-              Cancel
+              Avbryt
             </button>
             <button type="submit" className="btn btn-primary">
-              {post ? "Save Changes" : "Publish Post"}
+              {post ? "Spara ändringar" : "Publicera nyhet"}
             </button>
           </div>
         </form>

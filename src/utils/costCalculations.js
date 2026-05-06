@@ -114,6 +114,38 @@ export function calculateCampFinancials(camp, registeredCount) {
   };
 }
 
+export function getCampDisplayStatus(camp, financials = null) {
+  const status = String(camp.status || "").toLowerCase();
+  if (status === "canceled" || status === "cancelled" || status === "inställt") {
+    return "canceled";
+  }
+
+  if (camp.endDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(camp.endDate);
+    endDate.setHours(0, 0, 0, 0);
+    if (today > endDate) return "completed";
+  }
+
+  const f = financials ?? calculateCampFinancials(camp, 0);
+  const actualPerDay = f.actualCostPerAthletePerDay;
+
+  if (
+    actualPerDay !== null &&
+    actualPerDay !== undefined &&
+    actualPerDay <= f.targetPricePerDay
+  ) {
+    return "viable";
+  }
+
+  if (f.financialStatus === "viable" || f.financialStatus === "full") {
+    return "viable";
+  }
+
+  return "needs-target";
+}
+
 export function formatSEK(amount) {
   if (amount === null || amount === undefined) return "—";
   return new Intl.NumberFormat("sv-SE", {
@@ -125,7 +157,7 @@ export function formatSEK(amount) {
 
 export function formatDate(dateStr) {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-SE", {
+  return new Date(dateStr).toLocaleDateString("sv-SE", {
     year: "numeric",
     month: "short",
     day: "numeric",

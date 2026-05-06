@@ -11,11 +11,11 @@ const TYPE_COLORS = {
 };
 
 const TYPE_LABELS = {
-  deadline: "Reg. Deadline",
-  payment:  "Payment",
-  camp:     "Camp",
-  travel:   "Travel",
-  meeting:  "Meeting",
+  deadline: "Anmälan stänger",
+  payment:  "Betalning",
+  camp:     "Läger",
+  travel:   "Resa",
+  meeting:  "Möte",
 };
 
 export default function CalendarAgenda({ limit }) {
@@ -24,7 +24,7 @@ export default function CalendarAgenda({ limit }) {
   const visible = limit ? events.slice(0, limit) : events;
 
   if (visible.length === 0) {
-    return <p className="empty-state">No upcoming events.</p>;
+    return <p className="empty-state">Inga kommande händelser.</p>;
   }
 
   return (
@@ -43,7 +43,7 @@ export default function CalendarAgenda({ limit }) {
               <span className="agenda-label">{ev.label}</span>
               {ev.campId && (
                 <Link to={`/camps/${ev.campId}`} className="agenda-link">
-                  View
+                  Visa
                 </Link>
               )}
             </div>

@@ -45,11 +45,11 @@ function buildEvent({ uid, summary, description, location, startDate, endDate })
 function campDescription(camp) {
   return [
     camp.description,
-    `Coaches: ${camp.coaches?.join(", ")}`,
-    `Age groups: ${camp.ageGroups?.join(", ")}`,
-    `Training days: ${camp.trainingDays}`,
-    camp.registrationDeadline ? `Registration deadline: ${camp.registrationDeadline}` : "",
-    camp.paymentDeadline ? `Payment deadline: ${camp.paymentDeadline}` : "",
+    `Tränare: ${camp.coaches?.join(", ")}`,
+    `Grupper: ${camp.ageGroups?.join(", ")}`,
+    `Träningsdagar: ${camp.trainingDays}`,
+    camp.registrationDeadline ? `Sista anmälningsdag: ${camp.registrationDeadline}` : "",
+    camp.paymentDeadline ? `Sista betalningsdag: ${camp.paymentDeadline}` : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -75,8 +75,8 @@ function campEvents(camp) {
     events.push(
       buildEvent({
         uid: `camp-${camp.id}-reg@saltissklk`,
-        summary: `Registration Deadline — ${camp.name}`,
-        description: `Last day to register for ${camp.name}.`,
+        summary: `Sista anmälningsdag - ${camp.name}`,
+        description: `Sista dag att anmäla sig till ${camp.name}.`,
         location: "",
         startDate: camp.registrationDeadline,
         endDate: camp.registrationDeadline,
@@ -89,8 +89,8 @@ function campEvents(camp) {
     events.push(
       buildEvent({
         uid: `camp-${camp.id}-pay@saltissklk`,
-        summary: `Payment Deadline — ${camp.name}`,
-        description: `Payment due for ${camp.name}.`,
+        summary: `Sista betalningsdag - ${camp.name}`,
+        description: `Betalning för ${camp.name} ska vara genomförd.`,
         location: "",
         startDate: camp.paymentDeadline,
         endDate: camp.paymentDeadline,
@@ -105,7 +105,7 @@ function wrapCalendar(eventBlocks) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Saltsjöbadens SLK//Camp Calendar//EN",
+    "PRODID:-//Saltsjöbadens SLK//Lägerkalender//SV",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     ...eventBlocks,

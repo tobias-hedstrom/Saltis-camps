@@ -72,11 +72,11 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onCancel}>x</button>
-        <h2>{camp ? "Edit Camp" : "Add Camp"}</h2>
+        <h2>{camp ? "Redigera läger" : "Lägg till läger"}</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group span-2">
-              <label>Camp Name</label>
+              <label>Lägernamn</label>
               <input
                 name="name"
                 value={form.name}
@@ -86,7 +86,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group span-2">
-              <label>Location</label>
+              <label>Plats</label>
               <input
                 name="location"
                 value={form.location}
@@ -96,7 +96,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Start Date</label>
+              <label>Startdatum</label>
               <input
                 type="date"
                 name="startDate"
@@ -107,7 +107,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>End Date</label>
+              <label>Slutdatum</label>
               <input
                 type="date"
                 name="endDate"
@@ -118,7 +118,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Travel Date Out</label>
+              <label>Avresedatum</label>
               <input
                 type="date"
                 name="travelDateOut"
@@ -128,7 +128,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Travel Date Home</label>
+              <label>Hemresedatum</label>
               <input
                 type="date"
                 name="travelDateHome"
@@ -138,7 +138,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Training Days</label>
+              <label>Träningsdagar</label>
               <input
                 type="number"
                 name="trainingDays"
@@ -150,7 +150,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Max Athletes</label>
+              <label>Max antal åkare</label>
               <input
                 type="number"
                 name="maxAthletes"
@@ -162,7 +162,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Registration Deadline</label>
+              <label>Sista anmälningsdag</label>
               <input
                 type="date"
                 name="registrationDeadline"
@@ -173,7 +173,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Payment Deadline</label>
+              <label>Sista betalningsdag</label>
               <input
                 type="date"
                 name="paymentDeadline"
@@ -184,7 +184,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Info Meeting Date</label>
+              <label>Informationsmöte</label>
               <input
                 type="date"
                 name="infoMeetingDate"
@@ -194,18 +194,18 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group">
-              <label>Coaches (comma-separated)</label>
+              <label>Tränare (kommaseparerat)</label>
               <input
                 name="coaches"
                 value={form.coaches}
                 onChange={handleChange}
                 className="form-control"
-                placeholder="Coach A, Coach B"
+                placeholder="Tränare A, Tränare B"
               />
             </div>
 
             <div className="form-group span-2">
-              <label>Age Groups</label>
+              <label>Grupper</label>
               <div className="checkbox-row">
                 {AGE_GROUPS.map((g) => (
                   <label key={g} className="checkbox-label">
@@ -220,7 +220,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               </div>
             </div>
             <div className="form-group span-2">
-              <label>Disciplines</label>
+              <label>Discipliner</label>
               <div className="checkbox-row">
                 {DISCIPLINES.map((d) => (
                   <label key={d} className="checkbox-label">
@@ -236,7 +236,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
             </div>
 
             <div className="form-group span-2">
-              <label>Description</label>
+              <label>Beskrivning</label>
               <textarea
                 name="description"
                 value={form.description}
@@ -246,7 +246,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group span-2">
-              <label>Travel Information</label>
+              <label>Reseinformation</label>
               <textarea
                 name="travelInfo"
                 value={form.travelInfo}
@@ -256,7 +256,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group span-2">
-              <label>Accommodation Information</label>
+              <label>Boendeinformation</label>
               <textarea
                 name="accommodationInfo"
                 value={form.accommodationInfo}
@@ -266,7 +266,7 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               />
             </div>
             <div className="form-group span-2">
-              <label>Packing List (one item per line)</label>
+              <label>Packlista (en rad per sak)</label>
               <textarea
                 name="packingList"
                 value={form.packingList}
@@ -281,11 +281,11 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
               <ThumbnailUpload
                 value={form.thumbnailImage}
                 onChange={(url) => setForm((f) => ({ ...f, thumbnailImage: url }))}
-                label="Camp Thumbnail Image"
+                label="Lägerbild"
               />
             </div>
             <div className="form-group span-2">
-              <label>Camp Gallery Images</label>
+              <label>Bildgalleri</label>
               <GalleryUpload
                 images={form.images}
                 onChange={(imgs) => setForm((f) => ({ ...f, images: imgs }))}
@@ -295,10 +295,10 @@ export default function AdminCampForm({ camp, onSave, onCancel }) {
 
           <div className="form-row" style={{ marginTop: "1.5rem" }}>
             <button type="button" className="btn btn-secondary" onClick={onCancel}>
-              Cancel
+              Avbryt
             </button>
             <button type="submit" className="btn btn-primary">
-              Save Camp
+              Spara läger
             </button>
           </div>
         </form>

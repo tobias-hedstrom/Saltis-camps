@@ -3,22 +3,16 @@ import { Link } from "react-router-dom";
 import { useAppData } from "../hooks/useAppData";
 import { formatDate } from "../utils/costCalculations";
 import { NEWS_CATEGORIES } from "../data/initialData";
+import { CATEGORY_COLORS, categoryLabel } from "../utils/displayText";
 
-const ALL_CATEGORIES = ["All", ...NEWS_CATEGORIES];
-
-const CATEGORY_COLORS = {
-  "Previous Camps": "#3182ce",
-  "Camp Reminder":  "#e53e3e",
-  "Board News":     "#805ad5",
-  "General News":   "#38a169",
-};
+const ALL_CATEGORIES = ["Alla", ...NEWS_CATEGORIES];
 
 export default function News() {
   const { newsPosts } = useAppData();
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("Alla");
 
   const filtered =
-    activeCategory === "All"
+    activeCategory === "Alla"
       ? newsPosts
       : newsPosts.filter((n) => n.category === activeCategory);
 
@@ -33,8 +27,8 @@ export default function News() {
   return (
     <div className="news-page">
       <div className="page-header">
-        <h1>News</h1>
-        <p>Updates, photos, camp reminders, and board information.</p>
+        <h1>Nyheter</h1>
+        <p>Klubbnyheter, bilder, lägerpåminnelser och information från styrelsen.</p>
       </div>
 
       <div className="filter-tabs">
@@ -44,12 +38,12 @@ export default function News() {
             className={`filter-tab ${activeCategory === cat ? "filter-tab-active" : ""}`}
             onClick={() => setActiveCategory(cat)}
           >
-            {cat}
+            {cat === "Alla" ? "Alla" : categoryLabel(cat)}
           </button>
         ))}
       </div>
 
-      {activeCategory === "All" ? (
+      {activeCategory === "Alla" ? (
         <>
           {NEWS_CATEGORIES.map((cat) => {
             const posts = byCategory(cat);
@@ -57,7 +51,7 @@ export default function News() {
             return (
               <section key={cat} className="section">
                 <div className="section-header">
-                  <h2>{cat}</h2>
+                  <h2>{categoryLabel(cat)}</h2>
                 </div>
                 <div className="news-grid">
                   {posts.map((p) => (
@@ -68,7 +62,7 @@ export default function News() {
             );
           })}
           {newsPosts.length === 0 && (
-            <p className="empty-state">No news posts yet.</p>
+            <p className="empty-state">Inga nyheter har publicerats ännu.</p>
           )}
         </>
       ) : (
@@ -79,7 +73,7 @@ export default function News() {
             ))}
           </div>
           {sorted.length === 0 && (
-            <p className="empty-state">No news in this category.</p>
+            <p className="empty-state">Inga nyheter i den här kategorin.</p>
           )}
         </section>
       )}
@@ -105,7 +99,7 @@ function NewsCard({ post }) {
               className="news-thumb-placeholder"
               style={{ background: `linear-gradient(135deg, ${color}18, ${color}30)` }}
             >
-              <span className="news-thumb-cat" style={{ color }}>{post.category}</span>
+              <span className="news-thumb-cat" style={{ color }}>{categoryLabel(post.category)}</span>
             </div>
           )}
         </div>
@@ -116,7 +110,7 @@ function NewsCard({ post }) {
               className="news-category-badge"
               style={{ background: color + "20", color }}
             >
-              {post.category}
+              {categoryLabel(post.category)}
             </span>
             <span className="news-date">{formatDate(publishDate)}</span>
           </div>
@@ -124,9 +118,9 @@ function NewsCard({ post }) {
           <p className="news-card-summary">{excerpt}</p>
 
           <div className="news-card-actions">
-            <span className="btn-link" style={{ pointerEvents: "none" }}>Read more</span>
+            <span className="btn-link" style={{ pointerEvents: "none" }}>Läs mer</span>
             {relatedCampId && (
-              <span className="news-has-camp">Related camp</span>
+              <span className="news-has-camp">Kopplat läger</span>
             )}
           </div>
         </div>

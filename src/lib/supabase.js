@@ -62,6 +62,54 @@ export const db = URL && KEY ? {
     });
   },
 
+  // ── Users ─────────────────────────────────────────────────────────────────────
+
+  async getUsers() {
+    const res = await fetch(`${URL}/rest/v1/users?select=*`, { headers: baseHeaders() });
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return [];
+    return rows.map((r) => r.data);
+  },
+
+  async upsertUser(user) {
+    await fetch(`${URL}/rest/v1/users`, {
+      method: "POST",
+      headers: { ...baseHeaders(), Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ id: user.id, data: user }),
+    });
+  },
+
+  async deleteUser(id) {
+    await fetch(`${URL}/rest/v1/users?id=eq.${id}`, {
+      method: "DELETE",
+      headers: baseHeaders(),
+    });
+  },
+
+  // ── Athletes ──────────────────────────────────────────────────────────────────
+
+  async getAthletes() {
+    const res = await fetch(`${URL}/rest/v1/athletes?select=*`, { headers: baseHeaders() });
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return [];
+    return rows.map((r) => r.data);
+  },
+
+  async upsertAthlete(athlete) {
+    await fetch(`${URL}/rest/v1/athletes`, {
+      method: "POST",
+      headers: { ...baseHeaders(), Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ id: athlete.id, data: athlete }),
+    });
+  },
+
+  async deleteAthlete(id) {
+    await fetch(`${URL}/rest/v1/athletes?id=eq.${id}`, {
+      method: "DELETE",
+      headers: baseHeaders(),
+    });
+  },
+
   // ── Image storage ─────────────────────────────────────────────────────────────
 
   async uploadImage(file) {

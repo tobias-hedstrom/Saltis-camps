@@ -10,7 +10,7 @@ export default function ExportButton() {
 
   return (
     <button className="btn btn-export" onClick={handleClick}>
-      ⬇ Download Board Excel (CSV)
+      Ladda ner styrelseexport (CSV)
     </button>
   );
 }

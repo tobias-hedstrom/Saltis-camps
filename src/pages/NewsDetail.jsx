@@ -1,13 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useAppData } from "../hooks/useAppData";
 import { formatDate } from "../utils/costCalculations";
-
-const CATEGORY_COLORS = {
-  "Previous Camps": "#3182ce",
-  "Camp Reminder": "#e53e3e",
-  "Board News": "#805ad5",
-  "General News": "#38a169",
-};
+import { CATEGORY_COLORS, categoryLabel } from "../utils/displayText";
 
 export default function NewsDetail() {
   const { newsId } = useParams();
@@ -17,14 +11,14 @@ export default function NewsDetail() {
   if (!post) {
     return (
       <div className="news-detail">
-        <Link to="/news" className="back-link">Back to News</Link>
+        <Link to="/news" className="back-link">Tillbaka till nyheter</Link>
         <div className="card" style={{ marginTop: "2rem", textAlign: "center", padding: "3rem" }}>
-          <h2>News post not found</h2>
+          <h2>Nyheten hittades inte</h2>
           <p style={{ color: "var(--gray-500)", marginTop: "0.5rem" }}>
-            This post may have been removed.
+            Inlägget kan ha tagits bort.
           </p>
           <Link to="/news" className="btn btn-primary" style={{ marginTop: "1.5rem" }}>
-            Back to News
+            Tillbaka till nyheter
           </Link>
         </div>
       </div>
@@ -40,7 +34,7 @@ export default function NewsDetail() {
 
   return (
     <div className="news-detail">
-      <Link to="/news" className="back-link">Back to News</Link>
+      <Link to="/news" className="back-link">Tillbaka till nyheter</Link>
 
       {/* Hero image or placeholder */}
       {post.thumbnailImage ? (
@@ -49,7 +43,7 @@ export default function NewsDetail() {
         </div>
       ) : (
         <div className="news-hero-placeholder" style={{ background: `linear-gradient(135deg, ${color}22, ${color}44)`, borderColor: color + "33" }}>
-          <span className="news-hero-category" style={{ color }}>{post.category}</span>
+          <span className="news-hero-category" style={{ color }}>{categoryLabel(post.category)}</span>
         </div>
       )}
 
@@ -63,7 +57,7 @@ export default function NewsDetail() {
               color,
             }}
           >
-            {post.category}
+            {categoryLabel(post.category)}
           </span>
           <span className="news-date">{formatDate(publishDate)}</span>
         </div>
@@ -85,7 +79,7 @@ export default function NewsDetail() {
         {/* Image gallery */}
         {post.images?.length > 0 && (
           <div className="news-gallery-section">
-            <h2>Photos</h2>
+            <h2>Bilder</h2>
             <div className="news-gallery">
               {post.images.map((img) => (
                 <div key={img.id} className="news-gallery-item">
@@ -102,11 +96,11 @@ export default function NewsDetail() {
         {/* Related camp */}
         {relatedCamp && (
           <div className="news-related-camp card">
-            <div className="news-related-label">Related Camp</div>
+            <div className="news-related-label">Kopplat läger</div>
             <div className="news-related-name">{relatedCamp.name}</div>
             <div className="news-related-location">{relatedCamp.location}</div>
             <Link to={`/camps/${relatedCamp.id}`} className="btn btn-primary btn-sm" style={{ marginTop: "0.75rem" }}>
-              View Camp Details
+              Visa läger
             </Link>
           </div>
         )}

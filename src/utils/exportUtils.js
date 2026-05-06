@@ -16,50 +16,50 @@ function row(...cells) {
 function campFinancialRows(camp, campRegs) {
   const f = calculateCampFinancials(camp, campRegs.length);
   let csv = "";
-  csv += row("FINANCIAL SUMMARY");
-  csv += row("Total fixed cost", formatSEK(f.totalFixedCost));
-  csv += row("Variable cost per athlete", formatSEK(f.variableCostPerAthlete));
-  csv += row("Total variable cost", formatSEK(f.totalVariableCost));
-  csv += row("Total cost", formatSEK(f.totalCost));
-  csv += row("Actual cost per athlete", formatSEK(f.actualCostPerAthlete));
-  csv += row("Actual cost per athlete per day", formatSEK(f.actualCostPerAthletePerDay));
-  csv += row("Target price per day (board policy)", formatSEK(f.targetPricePerDay));
-  csv += row("Displayed parent price per day", formatSEK(f.displayedPricePerDay));
-  csv += row("Displayed total parent price", formatSEK(f.displayedTotalPricePerAthlete));
-  csv += row("Minimum athletes needed for target", f.minimumAthletesNeeded ?? "—");
-  csv += row("Additional athletes needed", f.additionalAthletesNeeded ?? "—");
-  csv += row("Financial status", f.financialStatus);
-  csv += row("Expected revenue", formatSEK(f.expectedRevenue));
-  csv += row("Expected surplus / deficit", formatSEK(f.expectedSurplusDeficit));
+  csv += row("EKONOMISK SAMMANSTÄLLNING");
+  csv += row("Total fast kostnad", formatSEK(f.totalFixedCost));
+  csv += row("Rörlig kostnad per åkare", formatSEK(f.variableCostPerAthlete));
+  csv += row("Total rörlig kostnad", formatSEK(f.totalVariableCost));
+  csv += row("Total kostnad", formatSEK(f.totalCost));
+  csv += row("Faktisk kostnad per åkare", formatSEK(f.actualCostPerAthlete));
+  csv += row("Faktisk kostnad per åkare och dag", formatSEK(f.actualCostPerAthletePerDay));
+  csv += row("Målpris per dag", formatSEK(f.targetPricePerDay));
+  csv += row("Visat pris per dag", formatSEK(f.displayedPricePerDay));
+  csv += row("Visat totalpris per åkare", formatSEK(f.displayedTotalPricePerAthlete));
+  csv += row("Minsta antal åkare för målpris", f.minimumAthletesNeeded ?? "—");
+  csv += row("Fler åkare behövs", f.additionalAthletesNeeded ?? "—");
+  csv += row("Ekonomisk status", f.financialStatus);
+  csv += row("Förväntad intäkt", formatSEK(f.expectedRevenue));
+  csv += row("Förväntat överskott / underskott", formatSEK(f.expectedSurplusDeficit));
   csv += "\n";
   return csv;
 }
 
 function campOverviewRows(camp, campRegs) {
   let csv = "";
-  csv += row("CAMP OVERVIEW");
-  csv += row("Camp name", camp.name);
-  csv += row("Location", camp.location);
-  csv += row("Start date", camp.startDate);
-  csv += row("End date", camp.endDate);
-  csv += row("Training days", camp.trainingDays);
-  csv += row("Age groups", camp.ageGroups.join(", "));
-  csv += row("Disciplines", camp.disciplines.join(", "));
-  csv += row("Coaches", camp.coaches.join(", "));
-  csv += row("Registered athletes", campRegs.length);
-  csv += row("Max athletes", camp.maxAthletes);
-  csv += row("Registration deadline", camp.registrationDeadline);
-  csv += row("Payment deadline", camp.paymentDeadline);
+  csv += row("LÄGERÖVERSIKT");
+  csv += row("Lägernamn", camp.name);
+  csv += row("Plats", camp.location);
+  csv += row("Startdatum", camp.startDate);
+  csv += row("Slutdatum", camp.endDate);
+  csv += row("Träningsdagar", camp.trainingDays);
+  csv += row("Grupper", camp.ageGroups.join(", "));
+  csv += row("Discipliner", camp.disciplines.join(", "));
+  csv += row("Tränare", camp.coaches.join(", "));
+  csv += row("Anmälda åkare", campRegs.length);
+  csv += row("Max antal åkare", camp.maxAthletes);
+  csv += row("Sista anmälningsdag", camp.registrationDeadline);
+  csv += row("Sista betalningsdag", camp.paymentDeadline);
   csv += "\n";
   return csv;
 }
 
 function campCostBreakdownRows(camp) {
   let csv = "";
-  csv += row("COST BREAKDOWN");
-  csv += row("Name", "Category", "Amount (SEK)", "Type", "Notes");
+  csv += row("KOSTNADSSTRUKTUR");
+  csv += row("Namn", "Kategori", "Belopp (SEK)", "Typ", "Anteckningar");
   camp.costs.forEach((c) => {
-    csv += row(c.name, c.category, c.amount, c.isFixed ? "Fixed" : "Variable", c.notes);
+    csv += row(c.name, c.category, c.amount, c.isFixed ? "Fast" : "Rörlig", c.notes);
   });
   csv += "\n";
   return csv;
@@ -67,17 +67,17 @@ function campCostBreakdownRows(camp) {
 
 function campRegistrationRows(campRegs) {
   let csv = "";
-  csv += row("REGISTERED ATHLETES");
+  csv += row("ANMÄLDA ÅKARE");
   csv += row(
-    "Athlete name",
-    "Age group",
-    "Parent / guardian",
-    "Email",
-    "Phone",
-    "Registration date",
-    "Payment status",
-    "Comments",
-    "Special notes"
+    "Åkarens namn",
+    "Grupp",
+    "Förälder / vårdnadshavare",
+    "E-post",
+    "Telefon",
+    "Anmälningsdatum",
+    "Betalningsstatus",
+    "Kommentarer",
+    "Särskilda anteckningar"
   );
   campRegs.forEach((r) => {
     csv += row(

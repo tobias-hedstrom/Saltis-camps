@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAppData } from "../hooks/useAppData";
-import { calculateCampFinancials, formatDate, daysUntil, formatSEK } from "../utils/costCalculations";
+import { calculateCampFinancials, getCampDisplayStatus, formatDate, daysUntil, formatSEK } from "../utils/costCalculations";
 import { generateCampICS, downloadICS } from "../utils/calendarExport";
 import CostSummary from "../components/CostSummary";
 import StatusBadge from "../components/StatusBadge";
@@ -28,14 +28,14 @@ export default function CampDetail() {
   if (!camp) {
     return (
       <div className="camp-detail">
-        <Link to="/camps" className="back-link">Back to Camps</Link>
+        <Link to="/camps" className="back-link">Tillbaka till läger</Link>
         <div className="card" style={{ marginTop: "2rem", textAlign: "center", padding: "3rem" }}>
-          <h2>Camp not found</h2>
+          <h2>Lägret hittades inte</h2>
           <p style={{ color: "var(--gray-500)", marginTop: "0.5rem" }}>
-            This camp may have been removed.
+            Lägret kan ha tagits bort.
           </p>
           <Link to="/camps" className="btn btn-primary" style={{ marginTop: "1.5rem" }}>
-            View All Camps
+            Visa alla läger
           </Link>
         </div>
       </div>
@@ -45,6 +45,7 @@ export default function CampDetail() {
   const campRegs = campRegistrations(camp.id);
   const count = registeredCount(camp.id);
   const f = calculateCampFinancials(camp, count);
+  const displayStatus = getCampDisplayStatus(camp, f);
   const regDays = daysUntil(camp.registrationDeadline);
 
   const registeredAthleteIds = new Set(campRegs.map((r) => r.athleteId));
@@ -97,7 +98,7 @@ export default function CampDetail() {
         />
       )}
 
-      <Link to="/camps" className="back-link">Back to Camps</Link>
+      <Link to="/camps" className="back-link">Tillbaka till läger</Link>
 
       {/* Hero image or placeholder */}
       {camp.thumbnailImage ? (
@@ -113,33 +114,33 @@ export default function CampDetail() {
             <h1 className="detail-title">{camp.name}</h1>
             <div className="detail-meta">
               <span className="meta-chip">{formatDate(camp.startDate)} — {formatDate(camp.endDate)}</span>
-              <span className="meta-chip">{camp.trainingDays} training days</span>
+              <span className="meta-chip">{camp.trainingDays} {camp.trainingDays === 1 ? "träningsdag" : "träningsdagar"}</span>
               <span className="meta-chip">{camp.disciplines.join(", ")}</span>
               <span className="meta-chip">{camp.ageGroups.join(", ")}</span>
             </div>
           </div>
           <div className="detail-header-actions">
-            <StatusBadge status={f.financialStatus} />
+            <StatusBadge status={displayStatus} />
             {!isClosed ? (
               <div className="deadline-badge">
-                Registration closes in {regDays} days
+                Anmälan stänger om {regDays} dagar
               </div>
             ) : (
-              <div className="deadline-badge deadline-past">Registration closed</div>
+              <div className="deadline-badge deadline-past">Anmälan stängd</div>
             )}
             <button
               className="btn btn-primary btn-lg"
               onClick={handleRegisterClick}
               disabled={isFull || isClosed}
             >
-              {isFull ? "Camp Full" : isClosed ? "Registration Closed" : "Register Now"}
+              {isFull ? "Fullt" : isClosed ? "Anmälan stängd" : "Anmäl"}
             </button>
             <button
               className="btn btn-secondary btn-sm"
               onClick={handleDownloadCalendar}
-              title="Download .ics calendar file"
+              title="Ladda ner kalenderfil"
             >
-              Download to Calendar
+              Lägg till i kalender
             </button>
           </div>
         </div>
@@ -148,7 +149,7 @@ export default function CampDetail() {
           <ProgressBar
             value={count}
             max={camp.maxAthletes}
-            label={`${count} of ${camp.maxAthletes} spots filled`}
+            label={`${count} av ${camp.maxAthletes} platser fyllda`}
             colorClass={isFull ? "progress-fill-green" : "progress-fill-blue"}
           />
         </div>
@@ -157,53 +158,74 @@ export default function CampDetail() {
       <div className="detail-grid">
         <div className="detail-main">
           <div className="card">
-            <h2>About This Camp</h2>
+            <h2>Om lägret</h2>
             <p>{camp.description}</p>
           </div>
 
           <div className="card">
-            <h2>Camp Details</h2>
+            <h2>Lägerdetaljer</h2>
             <div className="detail-rows">
-              <DetailRow label="Coaches" value={camp.coaches.join(", ")} />
-              <DetailRow label="Age groups" value={camp.ageGroups.join(", ")} />
-              <DetailRow label="Disciplines" value={camp.disciplines.join(", ")} />
-              <DetailRow label="Training days" value={camp.trainingDays} />
-              <DetailRow label="Max athletes" value={camp.maxAthletes} />
-              <DetailRow label="Registered athletes" value={count} />
+              <DetailRow label="Tränare" value={camp.coaches.join(", ")} />
+              <DetailRow label="Grupper" value={camp.ageGroups.join(", ")} />
+              <DetailRow label="Discipliner" value={camp.disciplines.join(", ")} />
+              <DetailRow label="Träningsdagar" value={camp.trainingDays} />
+              <DetailRow label="Max antal åkare" value={camp.maxAthletes} />
+              <DetailRow label="Anmälda åkare" value={count} />
               <DetailRow
-                label="Registration deadline"
+                label="Sista anmälningsdag"
                 value={formatDate(camp.registrationDeadline)}
               />
-              <DetailRow label="Payment deadline" value={formatDate(camp.paymentDeadline)} />
+              <DetailRow label="Sista betalningsdag" value={formatDate(camp.paymentDeadline)} />
               {camp.infoMeetingDate && (
-                <DetailRow label="Info meeting" value={formatDate(camp.infoMeetingDate)} />
+                <DetailRow label="Informationsmöte" value={formatDate(camp.infoMeetingDate)} />
               )}
               {camp.travelDateOut && (
-                <DetailRow label="Travel out" value={formatDate(camp.travelDateOut)} />
+                <DetailRow label="Avresa" value={formatDate(camp.travelDateOut)} />
               )}
               {camp.travelDateHome && (
-                <DetailRow label="Travel home" value={formatDate(camp.travelDateHome)} />
+                <DetailRow label="Hemresa" value={formatDate(camp.travelDateHome)} />
               )}
             </div>
           </div>
 
+          <div className="card">
+            <h2>Anmälda åkare</h2>
+            {campRegs.length === 0 ? (
+              <p className="empty-state compact">Inga åkare är anmälda ännu.</p>
+            ) : (
+              <div className="registered-list">
+                {campRegs.map((reg) => (
+                  <div key={reg.id} className="registered-public-row">
+                    <div>
+                      <strong>{reg.athleteName}</strong>
+                      <span>{reg.ageGroup || "Grupp saknas"}</span>
+                    </div>
+                    <span className="badge badge-upcoming">
+                      {reg.registrationType === "self" ? "Egen anmälan" : "Familjeanmälan"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {camp.accommodationInfo && (
             <div className="card">
-              <h2>Accommodation</h2>
+              <h2>Boende</h2>
               <p>{camp.accommodationInfo}</p>
             </div>
           )}
 
           {camp.travelInfo && (
             <div className="card">
-              <h2>Travel Information</h2>
+              <h2>Reseinformation</h2>
               <p>{camp.travelInfo}</p>
             </div>
           )}
 
           {camp.packingList?.length > 0 && (
             <div className="card">
-              <h2>Packing List</h2>
+              <h2>Packlista</h2>
               <ul className="packing-list">
                 {camp.packingList.map((item, i) => (
                   <li key={i}>{item}</li>
@@ -215,7 +237,7 @@ export default function CampDetail() {
           {/* Camp image gallery */}
           {camp.images?.length > 0 && (
             <div className="card">
-              <h2>Photos</h2>
+              <h2>Bilder</h2>
               <div className="camp-gallery">
                 {camp.images.map((img) => (
                   <div key={img.id} className="camp-gallery-item">
@@ -235,40 +257,41 @@ export default function CampDetail() {
 
           {f.displayedTotalPricePerAthlete !== null && (
             <div className="price-box card">
-              <div className="price-box-label">Estimated price per athlete</div>
+              <div className="price-box-label">Beräknat pris per åkare</div>
               <div className="price-box-value">
                 {formatSEK(Math.round(f.displayedTotalPricePerAthlete))}
               </div>
               <div className="price-box-sub">
-                {formatSEK(Math.round(f.displayedPricePerDay))} / day
+                {formatSEK(Math.round(f.displayedPricePerDay))} / dag
               </div>
               {f.actualCostPerAthletePerDay !== null &&
                 f.actualCostPerAthletePerDay > f.targetPricePerDay && (
-                  <div className="price-box-note">
-                    Showing target price — needs {f.additionalAthletesNeeded} more registrations
+                  <div className="camp-risk-box">
+                    <strong>Riskerar att ställas in</strong>
+                    <span>Det behövs {f.additionalAthletesNeeded ?? 0} fler anmälda för att nå målpriset 800 kr/dag.</span>
                   </div>
                 )}
             </div>
           )}
 
           <div className="card cta-card">
-            <h3>Register Your Athlete</h3>
+            <h3>Anmäl åkare</h3>
             <p>
-              Payment deadline: <strong>{formatDate(camp.paymentDeadline)}</strong>
+              Sista betalningsdag: <strong>{formatDate(camp.paymentDeadline)}</strong>
             </p>
             <button
               className="btn btn-primary btn-block"
               onClick={handleRegisterClick}
               disabled={isFull || isClosed}
             >
-              {isFull ? "Camp Full" : isClosed ? "Registration Closed" : "Register Now"}
+              {isFull ? "Fullt" : isClosed ? "Anmälan stängd" : "Anmäl"}
             </button>
             <button
               className="btn btn-secondary btn-block"
               style={{ marginTop: "0.5rem" }}
               onClick={handleDownloadCalendar}
             >
-              Download to Calendar
+              Lägg till i kalender
             </button>
           </div>
         </div>

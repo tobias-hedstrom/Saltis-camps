@@ -7,7 +7,7 @@ export default function PaymentTable({ registrations }) {
   const { getCamp } = useAppData();
 
   if (!registrations || registrations.length === 0) {
-    return <p className="empty-state">No registrations to show.</p>;
+    return <p className="empty-state">Inga anmälningar att visa.</p>;
   }
 
   return (
@@ -15,10 +15,10 @@ export default function PaymentTable({ registrations }) {
       <table className="data-table">
         <thead>
           <tr>
-            <th>Athlete</th>
-            <th>Camp</th>
-            <th>Payment Status</th>
-            <th>Registration Date</th>
+            <th>Åkare</th>
+            <th>Läger</th>
+            <th>Betalningsstatus</th>
+            <th>Anmäld</th>
           </tr>
         </thead>
         <tbody>
@@ -30,7 +30,7 @@ export default function PaymentTable({ registrations }) {
                 <td>
                   {camp
                     ? <Link to={`/camps/${r.campId}`} className="table-link">{camp.name}</Link>
-                    : <span className="text-muted">Camp removed</span>}
+                    : <span className="text-muted">Lägret borttaget</span>}
                 </td>
                 <td><StatusBadge status={r.paymentStatus} /></td>
                 <td>{formatDate(r.registrationDate)}</td>

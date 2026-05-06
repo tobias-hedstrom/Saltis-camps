@@ -1,16 +1,19 @@
 export default function StatusBadge({ status }) {
   const map = {
-    viable: { label: "Financially Viable", cls: "badge-viable" },
-    "at-risk": { label: "At Risk", cls: "badge-risk" },
-    "not-viable": { label: "Not Viable", cls: "badge-not-viable" },
-    full: { label: "Full", cls: "badge-full" },
-    closed: { label: "Closed", cls: "badge-closed" },
-    unknown: { label: "Pending", cls: "badge-pending" },
-    upcoming: { label: "Upcoming", cls: "badge-upcoming" },
-    confirmed: { label: "Confirmed", cls: "badge-viable" },
-    paid: { label: "Paid", cls: "badge-viable" },
-    pending: { label: "Pending", cls: "badge-pending" },
-    overdue: { label: "Overdue", cls: "badge-risk" },
+    viable: { label: "Ekonomiskt genomförbart", cls: "badge-viable" },
+    "needs-target": { label: "Målpris ej uppnått", cls: "badge-risk" },
+    "at-risk": { label: "Målpris ej uppnått", cls: "badge-risk" },
+    "not-viable": { label: "Ej genomförbart", cls: "badge-not-viable" },
+    full: { label: "Fullt", cls: "badge-full" },
+    completed: { label: "Genomfört", cls: "badge-completed" },
+    canceled: { label: "Inställt", cls: "badge-canceled" },
+    closed: { label: "Stängd", cls: "badge-closed" },
+    unknown: { label: "Inväntar", cls: "badge-pending" },
+    upcoming: { label: "Kommande", cls: "badge-upcoming" },
+    confirmed: { label: "Bekräftad", cls: "badge-viable" },
+    paid: { label: "Betald", cls: "badge-viable" },
+    pending: { label: "Kommande", cls: "badge-pending" },
+    overdue: { label: "Saknas", cls: "badge-risk" },
   };
   const entry = map[status] ?? { label: status, cls: "badge-pending" };
   return <span className={`badge ${entry.cls}`}>{entry.label}</span>;

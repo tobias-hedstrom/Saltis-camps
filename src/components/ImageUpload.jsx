@@ -17,7 +17,7 @@ async function uploadFile(file) {
 }
 
 /** Single image upload — thumbnail. */
-export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) {
+export function ThumbnailUpload({ value, onChange, label = "Bild" }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
@@ -31,7 +31,7 @@ export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) 
       onChange(url);
     } catch (err) {
       console.error("Upload failed:", err);
-      alert("Image upload failed. Please try again.");
+      alert("Bilduppladdningen misslyckades. Försök igen.");
     } finally {
       setUploading(false);
     }
@@ -42,13 +42,13 @@ export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) 
       <label className="form-label-sm">{label}</label>
       <div className="img-upload-area" onClick={() => !uploading && inputRef.current?.click()}>
         {uploading ? (
-          <span className="img-upload-placeholder">Uploading...</span>
+          <span className="img-upload-placeholder">Laddar upp...</span>
         ) : value ? (
           <div className="img-upload-preview-wrap">
-            <img src={value} alt="Thumbnail" className="img-upload-preview-img" />
+            <img src={value} alt="Förhandsvisning" className="img-upload-preview-img" />
           </div>
         ) : (
-          <span className="img-upload-placeholder">Click to upload image</span>
+          <span className="img-upload-placeholder">Klicka för att ladda upp bild</span>
         )}
         <input
           ref={inputRef}
@@ -65,11 +65,11 @@ export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) 
           style={{ marginTop: "0.35rem", fontSize: "0.8rem" }}
           onClick={() => onChange(null)}
         >
-          Remove image
+          Ta bort bild
         </button>
       )}
       {!db && (
-        <p className="img-upload-note">Local mode: stored as base64. Configure Supabase for persistent uploads.</p>
+        <p className="img-upload-note">Lokalt läge: bilden lagras som base64. Supabase används för bestående uppladdningar.</p>
       )}
     </div>
   );
@@ -96,7 +96,7 @@ export function GalleryUpload({ images = [], onChange }) {
       onChange([...images, ...uploaded]);
     } catch (err) {
       console.error("Gallery upload failed:", err);
-      alert("One or more images failed to upload. Please try again.");
+      alert("En eller flera bilder kunde inte laddas upp. Försök igen.");
     } finally {
       setUploading(false);
     }
@@ -121,7 +121,7 @@ export function GalleryUpload({ images = [], onChange }) {
             <div className="gallery-upload-meta">
               <input
                 className="form-control"
-                placeholder="Caption (optional)"
+                placeholder="Bildtext (valfritt)"
                 value={img.caption}
                 onChange={(e) => updateCaption(img.id, e.target.value)}
               />
@@ -131,7 +131,7 @@ export function GalleryUpload({ images = [], onChange }) {
                 style={{ fontSize: "0.8rem", marginTop: "0.25rem" }}
                 onClick={() => removeImage(img.id)}
               >
-                Remove
+                Ta bort
               </button>
             </div>
           </div>
@@ -145,7 +145,7 @@ export function GalleryUpload({ images = [], onChange }) {
         onClick={() => !uploading && inputRef.current?.click()}
         disabled={uploading}
       >
-        {uploading ? "Uploading..." : "+ Add Images"}
+        {uploading ? "Laddar upp..." : "+ Lägg till bilder"}
       </button>
       <input
         ref={inputRef}

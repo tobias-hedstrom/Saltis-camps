@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAppData } from "../hooks/useAppData";
-import { calculateCampFinancials, formatDate, formatSEK, daysUntil } from "../utils/costCalculations";
+import { calculateCampFinancials, getCampDisplayStatus, formatDate, formatSEK, daysUntil } from "../utils/costCalculations";
 import StatusBadge from "./StatusBadge";
 import ProgressBar from "./ProgressBar";
 
@@ -8,6 +8,7 @@ export default function CampCard({ camp, showFinancials = true }) {
   const { registeredCount } = useAppData();
   const count = registeredCount(camp.id);
   const f = calculateCampFinancials(camp, count);
+  const displayStatus = getCampDisplayStatus(camp, f);
   const regDaysLeft = daysUntil(camp.registrationDeadline);
 
   return (
@@ -27,14 +28,14 @@ export default function CampCard({ camp, showFinancials = true }) {
             <h3 className="camp-card-title">{camp.name}</h3>
             <div className="camp-card-location">{camp.location}</div>
           </div>
-          <StatusBadge status={f.financialStatus} />
+          <StatusBadge status={displayStatus} />
         </div>
 
         <div className="camp-meta">
           <span className="meta-chip">{formatDate(camp.startDate)} — {formatDate(camp.endDate)}</span>
           <span className="meta-chip">{camp.disciplines.join(", ")}</span>
           <span className="meta-chip">{camp.ageGroups.join(", ")}</span>
-          <span className="meta-chip">{camp.trainingDays} training days</span>
+          <span className="meta-chip">{camp.trainingDays} {camp.trainingDays === 1 ? "träningsdag" : "träningsdagar"}</span>
         </div>
 
         <div className="camp-card-body">{camp.description}</div>
@@ -44,7 +45,7 @@ export default function CampCard({ camp, showFinancials = true }) {
             <ProgressBar
               value={count}
               max={camp.maxAthletes}
-              label={`Registrations: ${count}/${camp.maxAthletes}`}
+              label={`Anmälda: ${count}/${camp.maxAthletes}`}
               colorClass={
                 count >= camp.maxAthletes
                   ? "progress-fill-green"
@@ -54,11 +55,7 @@ export default function CampCard({ camp, showFinancials = true }) {
               }
             />
             <div className="camp-price-estimate">
-              Price: <strong>{formatSEK(f.displayedPricePerDay)}/day</strong>
-              {f.actualCostPerAthletePerDay !== null &&
-                f.actualCostPerAthletePerDay > f.targetPricePerDay && (
-                  <span className="camp-price-note"> (target price — needs more registrations)</span>
-                )}
+              Pris: <strong>{formatSEK(Math.round(f.displayedPricePerDay))}/dag</strong>
             </div>
           </div>
         )}
@@ -66,14 +63,14 @@ export default function CampCard({ camp, showFinancials = true }) {
         <div className="camp-card-footer">
           {regDaysLeft !== null && regDaysLeft > 0 && (
             <span className="deadline-chip">
-              Registration closes in {regDaysLeft} day{regDaysLeft !== 1 ? "s" : ""}
+              Anmälan stänger om {regDaysLeft} dagar
             </span>
           )}
           {regDaysLeft !== null && regDaysLeft <= 0 && (
-            <span className="deadline-chip deadline-past">Registration closed</span>
+            <span className="deadline-chip deadline-past">Anmälan stängd</span>
           )}
           <Link to={`/camps/${camp.id}`} className="btn btn-primary">
-            View Camp
+            Visa mer
           </Link>
         </div>
       </div>
