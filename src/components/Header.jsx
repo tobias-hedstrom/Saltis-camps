@@ -20,7 +20,7 @@ export default function Header() {
 
       <div className="header-inner container">
         <Link to="/" className="site-logo" onClick={close}>
-          <img src="/src/assets/saltislogo.png" alt="Saltis Ski Club" className="logo-icon" />
+          <img src="/saltislogo.png" alt="Saltis Ski Club" className="logo-icon" />
           <span className="logo-text">Saltsjöbadens SLK</span>
         </Link>
 

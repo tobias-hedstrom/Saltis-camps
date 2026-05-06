@@ -9,7 +9,7 @@ import {
 
 // ─── DEFAULT STATE ─────────────────────────────────────────────────────────────
 const DEFAULT_STATE = {
-  _schemaVersion: 2,
+  _schemaVersion: 3,
   users: INITIAL_USERS,
   currentUserId: null,
   camps: INITIAL_CAMPS,

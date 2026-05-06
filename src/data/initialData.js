@@ -44,8 +44,12 @@ export const INITIAL_CAMPS = [
       "Fickpengar (~200 SEK)",
     ],
     status: "upcoming",
-    thumbnailImage: null,
-    images: [],
+    thumbnailImage: "/images/boson.jpg",
+    images: [
+      { id: "boson-g1", url: "/images/boson_moa.jpg", caption: "" },
+      { id: "boson-g2", url: "/images/photo1.jpg", caption: "" },
+      { id: "boson-g3", url: "/images/photo2.jpg", caption: "" },
+    ],
     costs: [
       { id: "c1-1", name: "Bosön anläggningsavgift", category: "Lane fees", amount: 8000, isFixed: true, notes: "Bokad för 25 deltagare" },
       { id: "c1-2", name: "Tränararvode", category: "Coach salaries", amount: 3000, isFixed: true, notes: "2 tränare" },
@@ -96,8 +100,11 @@ export const INITIAL_CAMPS = [
       "Spending money (~1000 SEK)",
     ],
     status: "upcoming",
-    thumbnailImage: null,
-    images: [],
+    thumbnailImage: "/images/solden.jpg",
+    images: [
+      { id: "solden-g1", url: "/images/solden2.jpg", caption: "" },
+      { id: "solden-g2", url: "/images/solden3.jpg", caption: "" },
+    ],
     costs: [
       { id: "c2-1", name: "Hotel accommodation (8 nights, half-board)", category: "Accommodation", amount: 38000, isFixed: true, notes: "Block booking" },
       { id: "c2-2", name: "Glacier lift passes (6 days)", category: "Lift passes", amount: 25000, isFixed: false, notes: "Per athlete" },
@@ -151,7 +158,7 @@ export const INITIAL_CAMPS = [
       "Spending money (~200 SEK)",
     ],
     status: "upcoming",
-    thumbnailImage: null,
+    thumbnailImage: "/images/oslo_sno.webp",
     images: [],
     costs: [
       { id: "c3-1", name: "Hostel accommodation (2 nights)", category: "Accommodation", amount: 7200, isFixed: true, notes: "Block booking" },
@@ -180,8 +187,12 @@ export const INITIAL_NEWS_POSTS = [
     excerpt:
       "Our athletes had an amazing week in Vemdalen with personal bests in both GS and SL. Read the full recap and see the photos.",
     body: "The 2024 Vemdalen Training Camp was a huge success. Athletes from U12 to U16 trained hard every day, with many recording personal best times in both disciplines. The coaching team was thrilled with the progress. A huge thank you to all families, coaches, and volunteers who made it happen.",
-    thumbnailImage: null,
-    images: [],
+    thumbnailImage: "/images/photo3.jpg",
+    images: [
+      { id: "news1-g1", url: "/images/photo4.jpg", caption: "" },
+      { id: "news1-g2", url: "/images/photo5.jpg", caption: "" },
+      { id: "news1-g3", url: "/images/photo6.jpg", caption: "" },
+    ],
     relatedCampId: null,
   },
   {
