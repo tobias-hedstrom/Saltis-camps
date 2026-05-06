@@ -1,27 +1,49 @@
-// PROTOTYPE ONLY: images are read via FileReader and stored as base64 data URLs in localStorage.
-// In production, upload images to a storage service (S3, Cloudflare R2, etc.) and store the URL.
-// Keep uploaded images small (<500 KB) to avoid filling localStorage quota.
+// Images are uploaded to Supabase Storage when configured (production).
+// Without Supabase, falls back to base64 in localStorage (local dev only).
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { db } from "../lib/supabase";
 
-/** Single image upload — replaces an existing image or adds a new one. */
+async function uploadFile(file) {
+  if (db) {
+    return await db.uploadImage(file);
+  }
+  // Fallback: base64 for local dev without Supabase
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Single image upload — thumbnail. */
 export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) {
   const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
 
-  function handleFile(e) {
+  async function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => onChange(ev.target.result);
-    reader.readAsDataURL(file);
     e.target.value = "";
+    setUploading(true);
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Image upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
     <div className="img-upload-single">
       <label className="form-label-sm">{label}</label>
-      <div className="img-upload-area" onClick={() => inputRef.current?.click()}>
-        {value ? (
+      <div className="img-upload-area" onClick={() => !uploading && inputRef.current?.click()}>
+        {uploading ? (
+          <span className="img-upload-placeholder">Uploading...</span>
+        ) : value ? (
           <div className="img-upload-preview-wrap">
             <img src={value} alt="Thumbnail" className="img-upload-preview-img" />
           </div>
@@ -36,7 +58,7 @@ export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) 
           onChange={handleFile}
         />
       </div>
-      {value && (
+      {value && !uploading && (
         <button
           type="button"
           className="btn-link btn-link-danger"
@@ -46,29 +68,38 @@ export function ThumbnailUpload({ value, onChange, label = "Thumbnail Image" }) 
           Remove image
         </button>
       )}
-      <p className="img-upload-note">Prototype: stored as base64 in localStorage. Use small images.</p>
+      {!db && (
+        <p className="img-upload-note">Local mode: stored as base64. Configure Supabase for persistent uploads.</p>
+      )}
     </div>
   );
 }
 
-/** Multi-image gallery upload — adds images with optional captions. */
+/** Multi-image gallery upload. */
 export function GalleryUpload({ images = [], onChange }) {
   const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
 
-  function handleFiles(e) {
+  async function handleFiles(e) {
     const files = Array.from(e.target.files);
-    const ts = Date.now();
-    const readers = files.map(
-      (file, i) =>
-        new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (ev) =>
-            resolve({ id: `img-${ts}-${i}`, url: ev.target.result, caption: "" });
-          reader.readAsDataURL(file);
-        })
-    );
-    Promise.all(readers).then((newImgs) => onChange([...images, ...newImgs]));
+    if (!files.length) return;
     e.target.value = "";
+    setUploading(true);
+    try {
+      const ts = Date.now();
+      const uploaded = await Promise.all(
+        files.map(async (file, i) => {
+          const url = await uploadFile(file);
+          return { id: `img-${ts}-${i}`, url, caption: "" };
+        })
+      );
+      onChange([...images, ...uploaded]);
+    } catch (err) {
+      console.error("Gallery upload failed:", err);
+      alert("One or more images failed to upload. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   function updateCaption(id, caption) {
@@ -111,9 +142,10 @@ export function GalleryUpload({ images = [], onChange }) {
         type="button"
         className="btn btn-secondary btn-sm"
         style={{ marginTop: images.length > 0 ? "0.75rem" : "0" }}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => !uploading && inputRef.current?.click()}
+        disabled={uploading}
       >
-        + Add Images
+        {uploading ? "Uploading..." : "+ Add Images"}
       </button>
       <input
         ref={inputRef}
@@ -123,7 +155,6 @@ export function GalleryUpload({ images = [], onChange }) {
         style={{ display: "none" }}
         onChange={handleFiles}
       />
-      <p className="img-upload-note">Prototype: stored as base64 in localStorage. Use small images.</p>
     </div>
   );
 }

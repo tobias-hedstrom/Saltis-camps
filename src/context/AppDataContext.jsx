@@ -6,6 +6,7 @@ import {
   INITIAL_USERS,
   INITIAL_REGISTRATIONS,
 } from "../data/initialData";
+import { db } from "../lib/supabase";
 
 // ─── DEFAULT STATE ─────────────────────────────────────────────────────────────
 const DEFAULT_STATE = {
@@ -25,7 +26,6 @@ function loadFromStorage() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_STATE;
     const saved = JSON.parse(raw);
-    // Reset on schema mismatch or missing users array (old format)
     if (!saved.users || saved._schemaVersion !== DEFAULT_STATE._schemaVersion) {
       return DEFAULT_STATE;
     }
@@ -38,7 +38,6 @@ function loadFromStorage() {
 // ─── REDUCER ──────────────────────────────────────────────────────────────────
 function reducer(state, action) {
   switch (action.type) {
-    // ── Auth ──
     case "LOGIN":
       return { ...state, currentUserId: action.payload };
 
@@ -55,7 +54,7 @@ function reducer(state, action) {
       };
     }
 
-    case "UPDATE_CURRENT_USER": {
+    case "UPDATE_CURRENT_USER":
       if (!state.currentUserId) return state;
       return {
         ...state,
@@ -63,9 +62,10 @@ function reducer(state, action) {
           u.id === state.currentUserId ? { ...u, ...action.payload } : u
         ),
       };
-    }
 
-    // ── Camps ──
+    case "SET_CAMPS":
+      return { ...state, camps: action.payload };
+
     case "ADD_CAMP":
       return { ...state, camps: [...state.camps, action.payload] };
 
@@ -86,7 +86,6 @@ function reducer(state, action) {
       };
     }
 
-    // ── Registrations ──
     case "ADD_REGISTRATION":
       return { ...state, registrations: [...state.registrations, action.payload] };
 
@@ -104,7 +103,6 @@ function reducer(state, action) {
         registrations: state.registrations.filter((r) => r.id !== action.payload),
       };
 
-    // ── Athletes ──
     case "ADD_ATHLETE":
       return { ...state, athletes: [...state.athletes, action.payload] };
 
@@ -122,7 +120,9 @@ function reducer(state, action) {
         athletes: state.athletes.filter((a) => a.id !== action.payload),
       };
 
-    // ── News ──
+    case "SET_NEWS":
+      return { ...state, newsPosts: action.payload };
+
     case "ADD_NEWS":
       return { ...state, newsPosts: [...state.newsPosts, action.payload] };
 
@@ -140,7 +140,6 @@ function reducer(state, action) {
         newsPosts: state.newsPosts.filter((n) => n.id !== action.payload),
       };
 
-    // ── Reset ──
     case "RESET":
       return { ...DEFAULT_STATE };
 
@@ -155,32 +154,55 @@ const AppDataContext = createContext(null);
 export function AppDataProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, loadFromStorage);
 
+  // Save non-camp/news state to localStorage (registrations, users, athletes, auth)
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-      // Silently ignore storage errors (private browsing, quota exceeded, large images)
+      // Silently ignore (private browsing, quota exceeded)
     }
   }, [state]);
 
-  // ── Derived auth values ──────────────────────────────────────────────────────
+  // ── Load camps + news from Supabase on mount ───────────────────────────────
+  useEffect(() => {
+    if (!db) return; // No Supabase config — use localStorage only
+    async function loadFromSupabase() {
+      try {
+        const [camps, news] = await Promise.all([db.getCamps(), db.getNews()]);
 
+        if (camps.length > 0) {
+          dispatch({ type: "SET_CAMPS", payload: camps });
+        } else {
+          // First run: seed Supabase with the initial data
+          await Promise.all(INITIAL_CAMPS.map((c) => db.upsertCamp(c)));
+        }
+
+        if (news.length > 0) {
+          dispatch({ type: "SET_NEWS", payload: news });
+        } else {
+          await Promise.all(INITIAL_NEWS_POSTS.map((p) => db.upsertNews(p)));
+        }
+      } catch (err) {
+        console.warn("Supabase load failed, using local data:", err);
+      }
+    }
+    loadFromSupabase();
+  }, []);
+
+  // ── Derived auth values ──────────────────────────────────────────────────────
   const currentUser = state.users.find((u) => u.id === state.currentUserId) ?? null;
-  const isLoggedIn = state.currentUserId !== null;
+  const isLoggedIn  = state.currentUserId !== null;
 
   function hasRole(role) {
     return currentUser?.roles.includes(role) ?? false;
   }
 
-  const isAdmin = hasRole("admin");
-  const isManager = hasRole("manager");
-  const isCoach = hasRole("coach");
-  const canManageCamps = isAdmin || isManager;
+  const isAdmin           = hasRole("admin");
+  const isManager         = hasRole("manager");
+  const isCoach           = hasRole("coach");
+  const canManageCamps    = isAdmin || isManager;
   const canExportBoardFiles = isAdmin || isManager || hasRole("board");
 
-  // ── Derived data helpers ─────────────────────────────────────────────────────
-
-  /** Athletes belonging to the currently logged-in user */
   const userAthletes = state.currentUserId
     ? state.athletes.filter((a) => a.userId === state.currentUserId)
     : [];
@@ -225,7 +247,7 @@ export function AppDataProvider({ children }) {
     return events.sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  // ── Auth action creators ─────────────────────────────────────────────────────
+  // ── Auth actions ─────────────────────────────────────────────────────────────
 
   function login(email, password) {
     const user = state.users.find(
@@ -241,22 +263,11 @@ export function AppDataProvider({ children }) {
   }
 
   function createAccount({ name, email, password, children = [] }) {
-    const exists = state.users.some(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    );
+    const exists = state.users.some((u) => u.email.toLowerCase() === email.toLowerCase());
     if (exists) return false;
-
     const ts = Date.now();
     const userId = `user-${ts}`;
-    const newUser = {
-      id: userId,
-      name,
-      email,
-      password,
-      roles: ["parent"],
-      phone: "",
-      emergencyContact: "",
-    };
+    const newUser = { id: userId, name, email, password, roles: ["parent"], phone: "", emergencyContact: "" };
     const newAthletes = children.map((child, i) => ({
       id: `athlete-${ts}-${i}`,
       userId,
@@ -268,7 +279,6 @@ export function AppDataProvider({ children }) {
       equipmentLevel: child.equipmentLevel || "Training",
       clubGroup: "",
     }));
-
     dispatch({ type: "CREATE_ACCOUNT", payload: { user: newUser, athletes: newAthletes } });
     return true;
   }
@@ -277,29 +287,27 @@ export function AppDataProvider({ children }) {
     dispatch({ type: "UPDATE_CURRENT_USER", payload: updates });
   }
 
-  // ── Camp action creators ─────────────────────────────────────────────────────
+  // ── Camp actions ─────────────────────────────────────────────────────────────
 
-  function addCamp(camp) {
-    dispatch({
-      type: "ADD_CAMP",
-      payload: {
-        thumbnailImage: null,
-        images: [],
-        ...camp,
-        id: camp.id ?? `camp-${Date.now()}`,
-      },
-    });
+  async function addCamp(camp) {
+    const newCamp = { thumbnailImage: null, images: [], ...camp, id: camp.id ?? `camp-${Date.now()}` };
+    dispatch({ type: "ADD_CAMP", payload: newCamp });
+    if (db) db.upsertCamp(newCamp).catch(console.warn);
   }
 
-  function updateCamp(campId, updates) {
-    dispatch({ type: "UPDATE_CAMP", payload: { id: campId, ...updates } });
+  async function updateCamp(campId, updates) {
+    const existing = state.camps.find((c) => c.id === campId);
+    const updated  = { ...existing, ...updates, id: campId };
+    dispatch({ type: "UPDATE_CAMP", payload: updated });
+    if (db) db.upsertCamp(updated).catch(console.warn);
   }
 
-  function deleteCamp(campId) {
+  async function deleteCamp(campId) {
     dispatch({ type: "DELETE_CAMP", payload: campId });
+    if (db) db.deleteCamp(campId).catch(console.warn);
   }
 
-  // ── Registration action creators ─────────────────────────────────────────────
+  // ── Registration actions ──────────────────────────────────────────────────────
 
   function addRegistration(reg) {
     dispatch({
@@ -323,7 +331,7 @@ export function AppDataProvider({ children }) {
     dispatch({ type: "DELETE_REGISTRATION", payload: registrationId });
   }
 
-  // ── Athlete action creators ──────────────────────────────────────────────────
+  // ── Athlete actions ───────────────────────────────────────────────────────────
 
   function saveAthlete(data) {
     const exists = state.athletes.find((a) => a.id === data.id);
@@ -337,27 +345,24 @@ export function AppDataProvider({ children }) {
     dispatch({ type: "DELETE_ATHLETE", payload: athleteId });
   }
 
-  // ── News action creators ─────────────────────────────────────────────────────
+  // ── News actions ──────────────────────────────────────────────────────────────
 
-  function addNews(post) {
-    dispatch({
-      type: "ADD_NEWS",
-      payload: {
-        id: `news-${Date.now()}`,
-        thumbnailImage: null,
-        images: [],
-        relatedCampId: null,
-        ...post,
-      },
-    });
+  async function addNews(post) {
+    const newPost = { thumbnailImage: null, images: [], relatedCampId: null, ...post, id: post.id ?? `news-${Date.now()}` };
+    dispatch({ type: "ADD_NEWS", payload: newPost });
+    if (db) db.upsertNews(newPost).catch(console.warn);
   }
 
-  function updateNews(newsId, updates) {
-    dispatch({ type: "UPDATE_NEWS", payload: { id: newsId, ...updates } });
+  async function updateNews(newsId, updates) {
+    const existing = state.newsPosts.find((n) => n.id === newsId);
+    const updated  = { ...existing, ...updates, id: newsId };
+    dispatch({ type: "UPDATE_NEWS", payload: updated });
+    if (db) db.upsertNews(updated).catch(console.warn);
   }
 
-  function deleteNews(newsId) {
+  async function deleteNews(newsId) {
     dispatch({ type: "DELETE_NEWS", payload: newsId });
+    if (db) db.deleteNews(newsId).catch(console.warn);
   }
 
   // ── Reset ────────────────────────────────────────────────────────────────────
@@ -370,12 +375,9 @@ export function AppDataProvider({ children }) {
   // ─────────────────────────────────────────────────────────────────────────────
 
   const value = {
-    // Raw state
     camps: state.camps,
     newsPosts: state.newsPosts,
     registrations: state.registrations,
-
-    // Auth
     currentUser,
     isLoggedIn,
     isAdmin,
@@ -383,25 +385,17 @@ export function AppDataProvider({ children }) {
     isCoach,
     canManageCamps,
     canExportBoardFiles,
-
-    // Per-user derived state
     athletes: userAthletes,
-
-    // Derived helpers
     registeredCount,
     campRegistrations,
     myRegistrations,
     getCamp,
     getNews,
     calendarEvents,
-
-    // Auth actions
     login,
     logout,
     createAccount,
     updateCurrentUser,
-
-    // Data actions
     addCamp,
     updateCamp,
     deleteCamp,
